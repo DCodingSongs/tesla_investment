@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TESLAAI | Client Login</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root { --color-primary: #ef4444; }
+        body { font-family: 'Inter', sans-serif; background-color: #1f2937; }
+        .text-primary { color: var(--color-primary); }
+        .bg-primary { background-color: var(--color-primary); }
+        .bg-primary:hover { background-color: #dc2626; }
+    </style>
+</head>
+
+<body class="flex items-center justify-center min-h-screen p-4">
+
+    <div class="w-full max-w-md bg-gray-800 p-8 rounded-xl shadow-2xl border border-gray-700">
+        <div class="text-center mb-8">
+            <h1 class="text-3xl font-bold text-primary mb-2">TESLAAI</h1>
+            <h2 class="text-xl font-semibold text-white">Client Login</h2>
+        </div>
+
+        <form id="login-form">
+            <div class="mb-5">
+                <label for="email" class="block text-sm font-medium text-gray-300 mb-2">Email Address</label>
+                <input 
+                    type="email" 
+                    id="email" 
+                    name="email" 
+                    required 
+                    class="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary"
+                    placeholder="Enter your email"
+                    autocomplete="off"
+                >
+            </div>
+            <div class="mb-6">
+                <label for="password" class="block text-sm font-medium text-gray-300 mb-2">Password</label>
+                <input 
+                    type="password" 
+                    id="password" 
+                    name="password" 
+                    required 
+                    class="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary"
+                    placeholder="Enter your password"
+                    autocomplete="current-password"
+                >
+            </div>
+
+            <div id="message-box" class="mb-4 p-3 rounded-lg text-sm text-center hidden" role="alert"></div>
+
+            <button type="submit" id="login-btn" class="w-full py-3 bg-primary text-white font-semibold rounded-lg transition duration-200">
+                Log In
+            </button>
+        </form>
+
+        <div class="mt-6 text-center text-sm">
+            <p class="text-gray-400">Don't have an account? 
+                <a href="register.html" class="text-primary hover:text-red-400 font-medium">Sign Up</a>
+            </p>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE_URL = window.location.origin; 
+        const form = document.getElementById('login-form');
+        const messageBox = document.getElementById('message-box');
+        const loginBtn = document.getElementById('login-btn');
+
+        // Redirect if already logged in
+        function getItemWithExpiry(key) {
+            const itemStr = localStorage.getItem(key);
+            if (!itemStr) return null;
+            try {
+                const item = JSON.parse(itemStr);
+                if (Date.now() > item.expiry) {
+                    localStorage.removeItem(key);
+                    return null;
+                }
+                return item.value;
+            } catch {
+                localStorage.removeItem(key);
+                return null;
+            }
+        }
+
+        if (getItemWithExpiry('userToken')) {
+            window.location.href = 'dashboard.html';
+        }
+
+        function setItemWithExpiry(key, value, ttl) {
+            const now = Date.now();
+            const item = { value, expiry: now + ttl };
+            localStorage.setItem(key, JSON.stringify(item));
+        }
+
+        function showMessage(text, type = 'error') {
+            messageBox.textContent = text;
+            messageBox.classList.remove('hidden', 'bg-red-900', 'bg-green-900', 'text-red-300', 'text-green-300');
+            if (type === 'success') {
+                messageBox.classList.add('bg-green-900', 'text-green-300');
+            } else {
+                messageBox.classList.add('bg-red-900', 'text-red-300');
+            }
+            messageBox.classList.remove('hidden');
+        }
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            loginBtn.textContent = 'Logging In...';
+            loginBtn.disabled = true;
+            messageBox.classList.add('hidden');
+
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/v1/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password }),
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data.success) {
+                    const ttl = 30 * 24 * 60 * 60 * 1000; // 30 days
+
+                    setItemWithExpiry('userToken', data.token, ttl);
+                    const user = data.user;
+                    const initials = user.name.match(/\b(\w)/g).join('').toUpperCase().substring(0, 2);
+
+                    setItemWithExpiry('clientName', user.name, ttl);
+                    setItemWithExpiry('clientInitials', initials, ttl);
+                    setItemWithExpiry('clientId', user.id, ttl);
+
+                    showMessage('Login successful! Redirecting to dashboard...', 'success');
+                    setTimeout(() => window.location.href = 'dashboard.html', 500);
+
+                } else {
+                    showMessage(data.message || 'Login failed. Please check your credentials.');
+                }
+            } catch (error) {
+                console.error('Network or Server Error:', error);
+                showMessage('Connection error. Please try again later.');
+            } finally {
+                loginBtn.textContent = 'Log In';
+                loginBtn.disabled = false;
+            }
+        });
+    </script>
+</body>
+</html>
