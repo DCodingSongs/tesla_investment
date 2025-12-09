@@ -36,14 +36,7 @@ app.use(express.static(__dirname));
 
 // --- Simulated Database (In-Memory) ---
 // UPDATED ADMIN CREDENTIALS: username: tesla_ai / password: @David081
-const defaultAdmin = { 
-    id: 'tesla_ai', 
-    name: 'TESLAAI Support', 
-    email: 'tesla_ai', // Using username as identifier here
-    password: '@David081', 
-    isAdmin: true, 
-    balance: 999999 
-};
+const defaultAdmin = { id: 'tesla_ai', name: 'TESLAAI Support', email: 'tesla_ai', password: '@David081', isAdmin: true, balance: 999999, subscribed:true, tier:1 };
 
 // Registered clients are stored here (in-memory, lost on server restart)
 let currentUsers = []; 
@@ -167,6 +160,7 @@ app.post('/api/v1/profile/update', (req, res) => {
 app.post('/api/v1/auth/login', (req, res) => {
     const { email, password } = req.body;
     
+    console.log(`Login attempt for email: ${email}`);
     const user = findUser(email, password);
 
     if (user) {
