@@ -1,0 +1,13 @@
+{
+  "watch": ["."],               
+  "ignore": [
+    "node_modules",                  
+    "dist",                           
+    ".git",                          
+    "logs",                           
+    "*.spec.ts"                      
+  ],
+  "ext": "ts,js,json, html,css",              
+   "exec": "node server.js" ,
+  "legacyWatch": true               
+}
