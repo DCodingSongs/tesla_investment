@@ -135,6 +135,7 @@
                     setItemWithExpiry('clientName', user.name, ttl);
                     setItemWithExpiry('clientInitials', initials, ttl);
                     setItemWithExpiry('clientId', user.id, ttl);
+                    setItemWithExpiry('isAdmin', user.isAdmin, ttl);
 
                     showMessage('Login successful! Redirecting to dashboard...', 'success');
                     setTimeout(() => window.location.href = 'dashboard.html', 500);

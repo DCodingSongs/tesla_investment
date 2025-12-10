@@ -510,6 +510,7 @@
                 <a href="#wallet" data-page="wallet"><i class="fas fa-wallet"></i> Wallet Balance</a>
                 <a href="#new-investment" data-page="new-investment"><i class="fas fa-chart-line"></i> New Investment</a>
                 <a href="#history" data-page="history"><i class="fas fa-clock-rotate-left"></i> History</a>
+                <a href="#user-management" data-page="user-management" id="user-management-nav" class="hidden"><i class="fas fa-users-cog"></i> User Management</a>
                 <!-- <a href="#chat" data-page="chat"><i class="fas fa-comment-dots"></i> Live Support</a> -->
                 <!-- <a href="#profile" data-page="profile"><i class="fas fa-user-circle"></i> Profile</a> -->
             </nav>
@@ -886,6 +887,13 @@
                 </div>
             </div>
 
+            <div id="user-management" class="page-content hidden">
+                <h2>👥 User Management</h2>
+                <div class="content-panel">
+                    <p>This is where admin users will manage other users.</p>
+                </div>
+            </div>
+
         </div>
     </div>
     
@@ -951,6 +959,22 @@
 
 
         // --- Auth & Profile Functions ---
+
+        function getItemWithExpiry(key) {
+            const itemStr = localStorage.getItem(key);
+            if (!itemStr) return null;
+            try {
+                const item = JSON.parse(itemStr);
+                if (Date.now() > item.expiry) {
+                    localStorage.removeItem(key);
+                    return null;
+                }
+                return item.value;
+            } catch {
+                localStorage.removeItem(key);
+                return null;
+            }
+        }
 
         /**
          * Checks for a valid JWT. If missing, redirects to login.
@@ -1127,6 +1151,10 @@ async function loadProfile() {
         document.addEventListener('DOMContentLoaded', () => {
             // 1. Initial Authentication Check and Profile Load
             loadProfile();
+            // Show admin links if user is admin
+            if (getItemWithExpiry('isAdmin') === true) {
+                document.getElementById('user-management-nav').classList.remove('hidden');
+            }
 
             // 2. Mobile Menu Toggle
             if (menuToggle) {
