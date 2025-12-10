@@ -980,7 +980,7 @@
          * Checks for a valid JWT. If missing, redirects to login.
          */
         function checkAuth() {
-            const token = localStorage.getItem('userToken');
+            const token = getItemWithExpiry('userToken');
             if (!token) {
                 // Not authenticated, redirect to login
                 window.location.href = 'login.html'; 
@@ -1150,6 +1150,7 @@ async function loadProfile() {
 
         document.addEventListener('DOMContentLoaded', () => {
             // 1. Initial Authentication Check and Profile Load
+            checkAuth();
             loadProfile();
             // Show admin links if user is admin
             if (getItemWithExpiry('isAdmin') === true) {
