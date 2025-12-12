@@ -1184,10 +1184,6 @@ window.addEventListener('load', () => {
 
 
 
-menuToggle.addEventListener("click", () => {
-    sidebar.classList.toggle("open");
-});
-        
         // Socket connection variable
         let chatSocket = null;
 
@@ -1256,7 +1252,6 @@ menuToggle.addEventListener("click", () => {
      // === Improved updateUI + loadProfile for development/learning ===\
 
         function updateUI(name, initials, clientId) {
-            debugger
             // Safely update all places that show name, avatar, client ID
             document.querySelectorAll('#welcome-name, #user-name').forEach(el => {
                 el.textContent = name || 'Guest';
@@ -1287,13 +1282,15 @@ async function loadProfile() {
 
     if (name && clientId) {
         updateUI(name, initials, clientId);
-    const name = JSON.parse(localStorage.getItem('clientName')|| 'null');
-    const initials =  JSON.parse(localStorage.getItem('clientInitials') ||'null');
-    const clientId =  JSON.parse(localStorage.getItem('clientId') || 'null')
-    const email =  JSON.parse(localStorage.getItem('clientEmail')||'null')
+        return
+    }
 
-    if (name?.value && clientId?.value) {
-        updateUI(name?.value, initials?.value || name?.value.substring(0,2).toUpperCase(), clientId?.value);
+    const nameFromStorage = JSON.parse(localStorage.getItem('clientName')|| 'null');
+    const initialsFromStorage =  JSON.parse(localStorage.getItem('clientInitials') ||'null');
+    const clientIdFromStorage =  JSON.parse(localStorage.getItem('clientId') || 'null')
+
+    if (nameFromStorage?.value && clientIdFromStorage?.value) {
+        updateUI(nameFromStorage?.value, initialsFromStorage?.value || nameFromStorage?.value.substring(0,2).toUpperCase(), clientIdFromStorage?.value);
         return; // Success — no need to hit backend
     }
 
