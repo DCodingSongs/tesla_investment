@@ -17,6 +17,7 @@ function initializeDatabase() {
         password TEXT,
         isAdmin BOOLEAN,
         balance REAL,
+        totalProfit REAL,
         subscribed BOOLEAN,
         tier INTEGER,
         address TEXT
@@ -31,6 +32,7 @@ function initializeDatabase() {
       password: process.env.ADMIN_PASSWORD || '@David081',
       isAdmin: 1,
       balance: 999999,
+      totalProfit: 0,
       subscribed: 1,
       tier: 1,
       address: ''
