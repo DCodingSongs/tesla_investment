@@ -29,13 +29,17 @@
             color: white;
             margin: 0;
         }
+
+ 
+
+
         /* TABLET RESPONSIVE FIX (769px–1024px) */
 @media (min-width: 769px) and (max-width: 1024px) {
 
     /* Reduce sidebar width so it fits */
-    /* .sidebar {
-        width: 200px;
-    } */
+    .sidebar {
+        width: -200px;
+    }
 
     /* Main content should shift correctly */
     .main-content {
@@ -53,12 +57,13 @@
 }
 
 
-        @media (max-width: 768px) {
+   
+    @media (max-width: 768px) {
 
-    /* Sidebar becomes hidden by default */
+  
     .sidebar {
         position: fixed;
-        left: -250px;   /* hide off-screen */
+        left: -250px;  
         top: 0;
         bottom: 0;
         width: 250px;
@@ -66,22 +71,18 @@
         z-index: 1000;
     }
 
-    /* Toggle sidebar when active */
-    .sidebar.open {
-        left: 0;
-    }
+ 
 
-    /* Main content becomes full width */
     .main-content {
         margin-left: 0 !important;
         width: 100%;
     }
 
-    @media (max-width: 767px) {
+    /* @media (max-width: 767px) {
     .sidebar {
         left: -250px;
     }
-}
+} */
     /* Top bar must stay above sidebar */
     .top-bar {
         position: sticky;
@@ -90,7 +91,9 @@
     }
 }
        
-
+.sidebar.open {
+        left: 0;
+    }
         /* Dashboard Layout */
         .dashboard-layout {
             display: flex;
@@ -98,7 +101,7 @@
         }
 
         .sidebar {
-           width: 250px;
+    width: 250px;
     background-color: var(--color-background-light);
     padding: 2rem 1.5rem;
     display: flex;
@@ -1288,7 +1291,7 @@ async function loadProfile() {
     const initials =  JSON.parse(localStorage.getItem('clientInitials') ||'null');
     const clientId =  JSON.parse(localStorage.getItem('clientId') || 'null')
     const email =  JSON.parse(localStorage.getItem('clientEmail')||'null')
-debugger
+
     if (name?.value && clientId?.value) {
         updateUI(name?.value, initials?.value || name?.value.substring(0,2).toUpperCase(), clientId?.value);
         return; // Success — no need to hit backend
@@ -1662,6 +1665,7 @@ debugger
                  document.getElementById(initialPageId).classList.remove('hidden');
             }
         });
+}
     </script>
 </body>
 </html>
