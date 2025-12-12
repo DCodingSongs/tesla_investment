@@ -85,9 +85,10 @@
                 return null;
             }
         }
-
+// debugger
         if (getItemWithExpiry('userToken')) {
-            window.location.href = 'dashboard.html';
+            console.log(getItemWithExpiry('userToken'))
+            // window.location.href = 'dashboard.html';
         }
 
         function setItemWithExpiry(key, value, ttl) {

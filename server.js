@@ -49,29 +49,32 @@ let activeConnections = {}; // Track currently connected sockets by userId
 
 // --- Helper Functions ---
 
+
 function findUser(db, email, password = null) {
-    return new Promise((resolve, reject) => {
-        db.get('SELECT * FROM users WHERE email = ?', [email], (err, user) => {
-            if (err) {
-                console.error('Database error:', err);
-                return resolve(null);
-            }
-            if (user && password) {
-                bcrypt.compare(password, user.password, (err, result) => {
-                    if (result) {
-                        resolve(user);
-                    } else {
-                        resolve(null);
-                    }
+    try {
+        // synchronous query to get the user by email
+        const user = db.prepare('SELECT * FROM users WHERE email = ?').get(email);
+        console.log('User lookup for email:', email, 'Found:', !!user);
+
+        if (!user) return Promise.resolve(null);
+
+        // If password provided, compare it
+        if (password) {
+            return new Promise((resolve) => {
+                bcrypt.compare(password, user.password, (err, match) => {
+                    if (err) return resolve(null);
+                    resolve(match ? user : null);
                 });
-            } else if (user && !password) {
-                resolve(user);
-            }
-            else {
-                resolve(null);
-            }
-        });
-    });
+            });
+        }
+
+        // No password check needed
+        return Promise.resolve(user);
+
+    } catch (err) {
+        console.error('Database error:', err);
+        return Promise.resolve(null);
+    }
 }
 
 function userExists(db, email) {
@@ -225,47 +228,55 @@ app.post('/api/v1/auth/login', async (req, res) => {
 app.post('/api/v1/auth/signup', async (req, res) => {
     const { name, email, password } = req.body;
 
-    if (await userExists(db, email)) {
-        return res.status(400).json({
-            success: false,
-            message: 'User already exists with this email address.'
-        });
-    }
-
-    bcrypt.hash(password, saltRounds, (err, hash) => {
-        if (err) {
-            return res.status(500).json({ success: false, message: 'Failed to create user.' });
+    try {
+        // Check if user exists (synchronously)
+        const existingUser = db.prepare('SELECT 1 FROM users WHERE email = ?').get(email);
+        if (existingUser) {
+            return res.status(400).json({
+                success: false,
+                message: 'User already exists with this email address.'
+            });
         }
 
+        // Hash password
+        const hash = await bcrypt.hash(password, saltRounds);
+
+        // Create new user object
         const newUser = {
             id: email,
             name,
             email,
             password: hash,
-            isAdmin: false,
-            balance: 200, // Giving the initial $200 bonus on signup
+            isAdmin: 0,      // 0 = false
+            balance: 200,    // initial bonus
             address: '',
-            subscribed: false,
+            subscribed: 0,   // 0 = false
             tier: 0
         };
 
-        db.run('INSERT INTO users (id, name, email, password, isAdmin, balance, address, subscribed, tier) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
-            [newUser.id, newUser.name, newUser.email, newUser.password, newUser.isAdmin, newUser.balance, newUser.address, newUser.subscribed, newUser.tier],
-            function (err) {
-                if (err) {
-                    return res.status(500).json({ success: false, message: 'Failed to create user.' });
-                }
-                chatHistoryByClient[newUser.id] = []; // Initialize chat history for the new client
-                const { password: _, ...safeUserData } = newUser;
-                return res.status(201).json({
-                    success: true,
-                    message: 'Sign up successful.',
-                    user: safeUserData
-                });
-            }
-        );
-    });
-});
+        // Insert user into DB
+        db.prepare(`
+            INSERT INTO users (id, name, email, password, isAdmin, balance, address, subscribed, tier)
+            VALUES (@id, @name, @email, @password, @isAdmin, @balance, @address, @subscribed, @tier)
+        `).run(newUser);
+
+        // Initialize chat history
+        chatHistoryByClient[newUser.id] = [];
+
+        // Remove password before sending response
+        const { password: _, ...safeUserData } = newUser;
+
+        return res.status(201).json({
+            success: true,
+            message: 'Sign up successful.',
+            user: safeUserData
+        });
+
+    } catch (err) {
+        console.error('Signup error:', err);
+        return res.status(500).json({ success: false, message: 'Failed to create user.' });
+    }
+});;
 }
 
 
@@ -415,25 +426,27 @@ function initializeServer(db) {
 
 
 // --- Start Server ---
-initializeDatabase().then(db => {
-    db.get('SELECT id FROM users WHERE isAdmin = ?', [true], (err, row) => {
-        if (err) {
-            console.error('Failed to fetch admin user ID:', err);
-            process.exit(1);
-        }
-        if (row) {
-            adminUserId = row.id;
-            initializeServer(db);
-            server.listen(PORT, () => {
-                console.log(`Chat server listening on port ${PORT}`);
-                console.log(`Deployment successful. Admin ID: ${adminUserId} | JWT Auth Routes Ready.`);
-            });
-        } else {
-            console.error('Admin user not found in the database.');
-            process.exit(1);
-        }
+try {
+    const db = initializeDatabase(); // sync
+
+    // Fetch admin (better-sqlite3 style)
+    const row = db.prepare('SELECT id FROM users WHERE isAdmin = 1').get();
+
+    if (!row) {
+        console.error('Admin user not found in the database.');
+        process.exit(1);
+    }
+
+    adminUserId = row.id;
+
+    initializeServer(db);
+
+    server.listen(PORT, () => {
+        console.log(`Chat server listening on port ${PORT}`);
+        console.log(`Deployment successful. Admin ID: ${adminUserId} | JWT Auth Routes Ready.`);
     });
-}).catch(err => {
+
+} catch (err) {
     console.error('Failed to initialize database:', err);
     process.exit(1);
-});
+}
