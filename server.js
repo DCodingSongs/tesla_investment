@@ -120,6 +120,104 @@ io.use((socket, next) => {
 // --- Express Authentication Routes (For login.html and register.html) ---
 
 function initializeRoutes(db) {
+    app.get('/api/v1/users', (req, res) => {
+        const authHeader = req.headers.authorization;
+        if (!authHeader) {
+            return res.status(401).json({ success: false, message: 'Authorization header required.' });
+        }
+        const token = authHeader.split(' ')[1];
+        try {
+            const decoded = jwt.verify(token, SECRET_KEY);
+            if (!decoded.isAdmin) {
+                return res.status(403).json({ success: false, message: 'Forbidden.' });
+            }
+            db.all('SELECT id, name, email, balance, tier FROM users', [], (err, rows) => {
+                if (err) {
+                    return res.status(500).json({ success: false, message: 'Failed to fetch users.' });
+                }
+                res.json({ success: true, users: rows });
+            });
+        } catch (err) {
+            return res.status(403).json({ success: false, message: 'Invalid or expired token.' });
+        }
+    });
+
+    app.post('/api/v1/users', async (req, res) => {
+        const authHeader = req.headers.authorization;
+        if (!authHeader) {
+            return res.status(401).json({ success: false, message: 'Authorization header required.' });
+        }
+        const token = authHeader.split(' ')[1];
+        try {
+            const decoded = jwt.verify(token, SECRET_KEY);
+            if (!decoded.isAdmin) {
+                return res.status(403).json({ success: false, message: 'Forbidden.' });
+            }
+            const { name, email, password } = req.body;
+            const existingUser = db.prepare('SELECT 1 FROM users WHERE email = ?').get(email);
+            if (existingUser) {
+                return res.status(400).json({ success: false, message: 'User already exists.' });
+            }
+            const hash = await bcrypt.hash(password, saltRounds);
+            const newUser = {
+                id: email,
+                name,
+                email,
+                password: hash,
+                isAdmin: 0,
+                balance: 0,
+                address: '',
+                subscribed: 0,
+                tier: 0
+            };
+            db.prepare(`
+                INSERT INTO users (id, name, email, password, isAdmin, balance, address, subscribed, tier)
+                VALUES (@id, @name, @email, @password, @isAdmin, @balance, @address, @subscribed, @tier)
+            `).run(newUser);
+            const { password: _, ...safeUserData } = newUser;
+            res.status(201).json({ success: true, user: safeUserData });
+        } catch (err) {
+            return res.status(403).json({ success: false, message: 'Invalid or expired token.' });
+        }
+    });
+
+    app.put('/api/v1/users/:id', (req, res) => {
+        const authHeader = req.headers.authorization;
+        if (!authHeader) {
+            return res.status(401).json({ success: false, message: 'Authorization header required.' });
+        }
+        const token = authHeader.split(' ')[1];
+        try {
+            const decoded = jwt.verify(token, SECRET_KEY);
+            if (!decoded.isAdmin) {
+                return res.status(403).json({ success: false, message: 'Forbidden.' });
+            }
+            const { name, email, balance, tier } = req.body;
+            db.prepare('UPDATE users SET name = ?, email = ?, balance = ?, tier = ? WHERE id = ?').run(name, email, balance, tier, req.params.id);
+            res.json({ success: true });
+        } catch (err) {
+            return res.status(403).json({ success: false, message: 'Invalid or expired token.' });
+        }
+    });
+
+    app.delete('/api/v1/users/:id', (req, res) => {
+        const authHeader = req.headers.authorization;
+        if (!authHeader) {
+            return res.status(401).json({ success: false, message: 'Authorization header required.' });
+        }
+        const token = authHeader.split(' ')[1];
+        try {
+            const decoded = jwt.verify(token, SECRET_KEY);
+            if (!decoded.isAdmin) {
+                return res.status(403).json({ success: false, message: 'Forbidden.' });
+            }
+            db.prepare('DELETE FROM users WHERE id = ?').run(req.params.id);
+            res.json({ success: true });
+        } catch (err) {
+            return res.status(403).json({ success: false, message: 'Invalid or expired token.' });
+        }
+    });
+
     // Placeholder for /api/v1/profile/me
     app.get('/api/v1/profile/me', (req, res) => {
     // A simple JWT verification middleware would be needed here in a real app.
