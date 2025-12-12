@@ -85,9 +85,10 @@
                 return null;
             }
         }
-
+// debugger
         if (getItemWithExpiry('userToken')) {
-            window.location.href = 'dashboard.html';
+            console.log(getItemWithExpiry('userToken'))
+            // window.location.href = 'dashboard.html';
         }
 
         function setItemWithExpiry(key, value, ttl) {
@@ -131,10 +132,11 @@
                     setItemWithExpiry('userToken', data.token, ttl);
                     const user = data.user;
                     const initials = user.name.match(/\b(\w)/g).join('').toUpperCase().substring(0, 2);
-
+debugger
                     setItemWithExpiry('clientName', user.name, ttl);
                     setItemWithExpiry('clientInitials', initials, ttl);
                     setItemWithExpiry('clientId', user.id, ttl);
+                    setItemWithExpiry('clientEmail', user.email, ttl);
                     setItemWithExpiry('isAdmin', user.isAdmin, ttl);
 
                     showMessage('Login successful! Redirecting to dashboard...', 'success');

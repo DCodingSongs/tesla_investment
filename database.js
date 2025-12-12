@@ -1,13 +1,16 @@
-const sqlite3 = require('sqlite3').verbose();
+const Database = require('better-sqlite3');
 const bcrypt = require('bcrypt');
-const db = new sqlite3.Database('./database.db');
 
 const saltRounds = 10;
 
+// Create or open database
+const db = new Database('./database.db');
+
 function initializeDatabase() {
-  return new Promise((resolve, reject) => {
-    db.serialize(() => {
-      db.run(`CREATE TABLE IF NOT EXISTS users (
+  try {
+    // Create users table
+    db.prepare(`
+      CREATE TABLE IF NOT EXISTS users (
         id TEXT PRIMARY KEY,
         name TEXT,
         email TEXT UNIQUE,
@@ -17,35 +20,47 @@ function initializeDatabase() {
         subscribed BOOLEAN,
         tier INTEGER,
         address TEXT
-      )`, (err) => {
-        if (err) return reject(err);
+      )
+    `).run();
+
+    // Default admin values
+    const defaultAdmin = {
+      id: 'tesla_ai',
+      name: 'TESLAAI Support',
+      email: 'tesla_ai@support.com',
+      password: process.env.ADMIN_PASSWORD || '@David081',
+      isAdmin: 1,
+      balance: 999999,
+      subscribed: 1,
+      tier: 1,
+      address: ''
+    };
+
+    // Check if admin exists
+    const exists = db.prepare(`SELECT id FROM users WHERE id = ?`).get(defaultAdmin.id);
+
+    if (!exists) {
+      const hashedPassword = bcrypt.hashSync(defaultAdmin.password, saltRounds);
+
+      db.prepare(`
+        INSERT INTO users (id, name, email, password, isAdmin, balance, subscribed, tier, address)
+        VALUES (@id, @name, @email, @password, @isAdmin, @balance, @subscribed, @tier, @address)
+      `).run({
+        ...defaultAdmin,
+        password: hashedPassword
       });
 
-      const defaultAdmin = {
-        id: 'tesla_ai',
-        name: 'TESLAAI Support',
-        email: 'tesla_ai',
-        password: process.env.ADMIN_PASSWORD || '@David081',
-        isAdmin: true,
-        balance: 999999,
-        subscribed: true,
-        tier: 1,
-        address: ''
-      };
+      console.log("Default admin created.");
+    } else {
+      console.log("Admin already exists.");
+    }
 
-      bcrypt.hash(defaultAdmin.password, saltRounds, (err, hash) => {
-        if (err) {
-          console.error('Error hashing password:', err);
-          return reject(err);
-        }
-        const { id, name, email, isAdmin, balance, subscribed, tier, address } = defaultAdmin;
-        db.run('INSERT OR IGNORE INTO users VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)', [id, name, email, hash, isAdmin, balance, subscribed, tier, address], (err) => {
-          if (err) return reject(err);
-          resolve(db);
-        });
-      });
-    });
-  });
+    return db;
+
+  } catch (error) {
+    console.error("Failed to initialize database:", error);
+    throw error;
+  }
 }
 
 module.exports = initializeDatabase;

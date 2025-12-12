@@ -526,8 +526,8 @@
             
             <div class="top-bar">
                 <div class="welcome-message">
-                    <h1>Welcome Back.
-                         <!-- <span id="welcome-name"></span>! -->
+                    <h1>
+                         <span id="welcome-name">Welcome Back.</span>!
                     </h1>
                 </div>
                 <div class="user-info-mobile">
@@ -1044,11 +1044,11 @@
 
 async function loadProfile() {
     // 1. Try to get data saved by login page (works even without backend)
-    const name = localStorage.getItem('clientName');
-    const initials = localStorage.getItem('clientInitials');
-    const clientId = localStorage.getItem('clientId');
-    const email = localStorage.getItem('clientEmail');
-
+    const name = JSON.parse(localStorage.getItem('clientName')|| 'null');
+    const initials =  JSON.parse(localStorage.getItem('clientInitials') ||'null');
+    const clientId =  JSON.parse(localStorage.getItem('clientId') || 'null')
+    const email =  JSON.parse(localStorage.getItem('clientEmail')||'null')
+debugger
     if (name && clientId) {
         updateUI(name, initials || name.substring(0,2).toUpperCase(), clientId);
         return; // Success — no need to hit backend
@@ -1206,7 +1206,8 @@ async function loadProfile() {
                 if (chatSocket) {
                     chatSocket.disconnect();
                 }
-                window.location.href = 'checkout.html';
+                // window.location.href = 'checkout.html';
+                window.location.href = 'login.html';
             });
 
             // 5. Profile Form Submission Handler
