@@ -1159,7 +1159,7 @@ links.forEach(link => {
     });
 });
 
-// Show page based on hash
+
 function showPage(page) {
     pages.forEach(p => {
         if (p.id === page) {
@@ -1256,7 +1256,7 @@ menuToggle.addEventListener("click", () => {
      // === Improved updateUI + loadProfile for development/learning ===\
 
         function updateUI(name, initials, clientId) {
-            // debugger
+            debugger
             // Safely update all places that show name, avatar, client ID
             document.querySelectorAll('#welcome-name, #user-name').forEach(el => {
                 el.textContent = name || 'Guest';
