@@ -27,7 +27,7 @@ function initializeDatabase() {
     const defaultAdmin = {
       id: 'tesla_ai',
       name: 'TESLAAI Support',
-      email: 'tesla_ai@gmail.com',
+      email: 'tesla_ai@support.com',
       password: process.env.ADMIN_PASSWORD || '@David081',
       isAdmin: 1,
       balance: 999999,
