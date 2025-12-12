@@ -466,6 +466,63 @@
             margin-right: 1rem;
             display: block; /* Show always for mobile */
         }
+
+        #user-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        #user-table th, #user-table td {
+            border: 1px solid var(--color-border);
+            padding: 12px;
+            text-align: left;
+        }
+
+        #user-table th {
+            background-color: #374151;
+            color: white;
+        }
+
+        #user-table tr:nth-child(even) {
+            background-color: #2c3541;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.5);
+        }
+
+        .modal-content {
+            background-color: var(--color-background-light);
+            margin: 10% auto;
+            padding: 20px;
+            border: 1px solid var(--color-border);
+            width: 80%;
+            max-width: 500px;
+            border-radius: var(--border-radius);
+        }
+
+        .close-button {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+
+        .close-button:hover,
+        .close-button:focus {
+            color: white;
+            text-decoration: none;
+            cursor: pointer;
+        }
         
         @media (max-width: 900px) {
             .sidebar {
@@ -547,22 +604,22 @@
                 <div class="stats-grid">
                     <div class="stat-card">
                         <p>Total Balance</p>
-                        <h3 id="total-balance">$200.00</h3>
+                        <h3 id="total-balance">$0.00</h3>
                         <span class="change growth" id="bonus-note">+<span id="bonus-amount">200.00</span> Sign-Up Bonus</span>
                     </div>
                     <div class="stat-card growth">
                         <p>Total Profit</p>
-                        <h3>$0.00</h3>
+                        <h3 id="total-profit">$0.00</h3>
                         <span class="change growth">0.0% All Time</span>
                     </div>
                     <div class="stat-card deposit">
                         <p>Active Investment</p>
-                        <h3>$0.00</h3>
+                        <h3 id="active-investment">$0.00</h3>
                         <span class="change">No Active Plan</span>
                     </div>
                     <div class="stat-card">
                         <p>Next Payout</p>
-                        <h3>N/A</h3>
+                        <h3 id="next-payout">N/A</h3>
                         <span class="change">No Active Investment</span>
                     </div>
                 </div>
@@ -890,10 +947,61 @@
             <div id="user-management" class="page-content hidden">
                 <h2>👥 User Management</h2>
                 <div class="content-panel">
-                    <p>This is where admin users will manage other users.</p>
+                    <button id="add-user-btn" class="cta-button">Add User</button>
+                    <table id="user-table">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Email</th>
+                                <th>Balance</th>
+                                <th>Tier</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="user-table-body">
+                            <!-- User data will be inserted here -->
+                        </tbody>
+                    </table>
                 </div>
             </div>
 
+        </div>
+    </div>
+
+    <!-- Add User Modal -->
+    <div id="add-user-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-button">&times;</span>
+            <h2>Add User</h2>
+            <form id="add-user-form">
+                <label for="add-name">Name:</label>
+                <input type="text" id="add-name" required>
+                <label for="add-email">Email:</label>
+                <input type="email" id="add-email" required>
+                <label for="add-password">Password:</label>
+                <input type="password" id="add-password" required>
+                <button type="submit" class="cta-button">Save</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Edit User Modal -->
+    <div id="edit-user-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-button">&times;</span>
+            <h2>Edit User</h2>
+            <form id="edit-user-form">
+                <input type="hidden" id="edit-user-id">
+                <label for="edit-name">Name:</label>
+                <input type="text" id="edit-name" required>
+                <label for="edit-email">Email:</label>
+                <input type="email" id="edit-email" required>
+                <label for="edit-balance">Balance:</label>
+                <input type="number" id="edit-balance" required>
+                <label for="edit-tier">Tier:</label>
+                <input type="number" id="edit-tier" required>
+                <button type="submit" class="cta-button">Save</button>
+            </form>
         </div>
     </div>
     
@@ -1044,13 +1152,14 @@
 
 async function loadProfile() {
     // 1. Try to get data saved by login page (works even without backend)
-    const name = JSON.parse(localStorage.getItem('clientName')|| 'null');
-    const initials =  JSON.parse(localStorage.getItem('clientInitials') ||'null');
-    const clientId =  JSON.parse(localStorage.getItem('clientId') || 'null')
-    const email =  JSON.parse(localStorage.getItem('clientEmail')||'null')
-debugger
+    const user = JSON.parse(localStorage.getItem('user'));
+    const name = user ? user.name : null;
+    const initials =  user ? user.name.match(/\b(\w)/g).join('').toUpperCase().substring(0, 2) : null;
+    const clientId =  user ? user.id : null;
+    const email =  user ? user.email : null;
+
     if (name && clientId) {
-        updateUI(name, initials || name.substring(0,2).toUpperCase(), clientId);
+        updateUI(name, initials, clientId);
         return; // Success — no need to hit backend
     }
 
@@ -1155,6 +1264,30 @@ debugger
             // Show admin links if user is admin
             if (getItemWithExpiry('isAdmin') === true) {
                 document.getElementById('user-management-nav').classList.remove('hidden');
+            }
+
+            const user = JSON.parse(localStorage.getItem('user'));
+            if (user) {
+                const balance = user.balance || 0;
+                const tier = user.tier || 0;
+                const profit = balance - 200;
+
+                document.getElementById('total-balance').textContent = `$${balance.toFixed(2)}`;
+                document.getElementById('total-profit').textContent = `$${profit.toFixed(2)}`;
+
+                const tierMap = {
+                    1: { name: 'Bronze Tier', amount: 2000 },
+                    2: { name: 'Silver Tier', amount: 5000 },
+                    3: { name: 'Gold Tier', amount: 10000 },
+                    4: { name: 'Platinum Tier', amount: 25000 },
+                    5: { name: 'Diamond Tier', amount: 50000 },
+                    6: { name: 'Centurion Tier', amount: 100000 }
+                };
+
+                if (tier > 0 && tierMap[tier]) {
+                    document.getElementById('active-investment').textContent = `$${tierMap[tier].amount.toFixed(2)}`;
+                    document.getElementById('next-payout').textContent = tierMap[tier].name;
+                }
             }
 
             // 2. Mobile Menu Toggle
@@ -1274,6 +1407,121 @@ debugger
                         sendMessage();
                     }
                 });
+            }
+
+            // --- Admin User Management ---
+            const userManagementPage = document.getElementById('user-management');
+            if (userManagementPage) {
+                const addUserBtn = document.getElementById('add-user-btn');
+                const addUserModal = document.getElementById('add-user-modal');
+                const editUserModal = document.getElementById('edit-user-modal');
+                const addUserForm = document.getElementById('add-user-form');
+                const editUserForm = document.getElementById('edit-user-form');
+                const userTableBody = document.getElementById('user-table-body');
+                const closeButtons = document.querySelectorAll('.close-button');
+
+                async function fetchUsers() {
+                    const token = getItemWithExpiry('userToken');
+                    const response = await fetch('/api/v1/users', {
+                        headers: getAuthHeaders(token)
+                    });
+                    const data = await response.json();
+                    if (data.success) {
+                        userTableBody.innerHTML = '';
+                        data.users.forEach(user => {
+                            const row = document.createElement('tr');
+                            row.innerHTML = `
+                                <td>${user.name}</td>
+                                <td>${user.email}</td>
+                                <td>${user.balance}</td>
+                                <td>${user.tier}</td>
+                                <td>
+                                    <button class="edit-btn" data-id="${user.id}">Edit</button>
+                                    <button class="delete-btn" data-id="${user.id}">Delete</button>
+                                </td>
+                            `;
+                            userTableBody.appendChild(row);
+                        });
+                    }
+                }
+
+                addUserBtn.addEventListener('click', () => {
+                    addUserModal.style.display = 'block';
+                });
+
+                closeButtons.forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        addUserModal.style.display = 'none';
+                        editUserModal.style.display = 'none';
+                    });
+                });
+
+                addUserForm.addEventListener('submit', async (e) => {
+                    e.preventDefault();
+                    const token = getItemWithExpiry('userToken');
+                    const name = document.getElementById('add-name').value;
+                    const email = document.getElementById('add-email').value;
+                    const password = document.getElementById('add-password').value;
+                    const response = await fetch('/api/v1/users', {
+                        method: 'POST',
+                        headers: getAuthHeaders(token),
+                        body: JSON.stringify({ name, email, password })
+                    });
+                    const data = await response.json();
+                    if (data.success) {
+                        addUserModal.style.display = 'none';
+                        fetchUsers();
+                    } else {
+                        showMessageBox('Error', data.message || 'Failed to add user.', 'error');
+                    }
+                });
+
+                userTableBody.addEventListener('click', async (e) => {
+                    const token = getItemWithExpiry('userToken');
+                    if (e.target.classList.contains('delete-btn')) {
+                        const id = e.target.dataset.id;
+                        await fetch(`/api/v1/users/${id}`, {
+                            method: 'DELETE',
+                            headers: getAuthHeaders(token)
+                        });
+                        fetchUsers();
+                    } else if (e.target.classList.contains('edit-btn')) {
+                        const row = e.target.closest('tr');
+                        const id = e.target.dataset.id;
+                        const name = row.cells[0].textContent;
+                        const email = row.cells[1].textContent;
+                        const balance = row.cells[2].textContent;
+                        const tier = row.cells[3].textContent;
+
+                        document.getElementById('edit-user-id').value = id;
+                        document.getElementById('edit-name').value = name;
+                        document.getElementById('edit-email').value = email;
+                        document.getElementById('edit-balance').value = balance;
+                        document.getElementById('edit-tier').value = tier;
+                        editUserModal.style.display = 'block';
+                    }
+                });
+
+                editUserForm.addEventListener('submit', async (e) => {
+                    e.preventDefault();
+                    const token = getItemWithExpiry('userToken');
+                    const id = document.getElementById('edit-user-id').value;
+                    const name = document.getElementById('edit-name').value;
+                    const email = document.getElementById('edit-email').value;
+                    const balance = document.getElementById('edit-balance').value;
+                    const tier = document.getElementById('edit-tier').value;
+                    await fetch(`/api/v1/users/${id}`, {
+                        method: 'PUT',
+                        headers: getAuthHeaders(token),
+                        body: JSON.stringify({ name, email, balance, tier })
+                    });
+                    editUserModal.style.display = 'none';
+                    fetchUsers();
+                });
+
+                if (getItemWithExpiry('isAdmin') === true) {
+                    fetchUsers();
+                }
             }
             
             // Ensure the initial page is displayed correctly (Home)
