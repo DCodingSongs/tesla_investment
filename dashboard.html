@@ -568,8 +568,8 @@
                 <a href="#new-investment" data-page="new-investment"><i class="fas fa-chart-line"></i> New Investment</a>
                 <a href="#history" data-page="history"><i class="fas fa-clock-rotate-left"></i> History</a>
                 <a href="#user-management" data-page="user-management" id="user-management-nav" class="hidden"><i class="fas fa-users-cog"></i> User Management</a>
-                <!-- <a href="#chat" data-page="chat"><i class="fas fa-comment-dots"></i> Live Support</a> -->
-                <!-- <a href="#profile" data-page="profile"><i class="fas fa-user-circle"></i> Profile</a> -->
+                <a href="#chat" data-page="chat"><i class="fas fa-comment-dots"></i> Live Support</a>
+                <a href="#profile" data-page="profile"><i class="fas fa-user-circle"></i> Profile</a>
             </nav>
             <!-- id="logout-button" -->
             <div class="sidebar-footer" style="margin-top: 50px;">
@@ -615,12 +615,12 @@
                     <div class="stat-card deposit">
                         <p>Active Investment</p>
                         <h3 id="active-investment">$0.00</h3>
-                        <span class="change">No Active Plan</span>
+                        <span class="change">Active Plan</span>
                     </div>
                     <div class="stat-card">
                         <p>Next Payout</p>
                         <h3 id="next-payout">N/A</h3>
-                        <span class="change">No Active Investment</span>
+                        <span class="change">Active Investment</span>
                     </div>
                 </div>
 
@@ -972,7 +972,7 @@
     <div id="add-user-modal" class="modal">
         <div class="modal-content">
             <span class="close-button">&times;</span>
-            <h2>Add User</h2>
+            <h2>Add Userd</h2>
             <form id="add-user-form">
                 <label for="add-name">Name:</label>
                 <input type="text" id="add-name" required>
@@ -1061,6 +1061,50 @@
         const msgTitle = document.getElementById('msgTitle');
         const msgText = document.getElementById('msgText');
         const msgConfirm = document.getElementById('msgConfirm');
+
+
+const links = document.querySelectorAll('.sidebar nav a');
+
+
+// When link is clicked
+links.forEach(link => {
+    link.addEventListener('click', function (e) {
+        e.preventDefault();
+
+        const page = this.getAttribute('data-page');
+        window.location.hash = page;  // Update URL
+        showPage(page);
+
+        // Highlight active link
+        links.forEach(a => a.classList.remove('active'));
+        this.classList.add('active');
+    });
+});
+
+// Show page based on hash
+function showPage(page) {
+    pages.forEach(p => {
+        if (p.id === page) {
+            p.style.display = 'block';
+        } else {
+            p.style.display = 'none';
+        }
+    });
+}
+
+// Load the correct page on refresh
+window.addEventListener('load', () => {
+    const hash = window.location.hash.replace('#', '');
+    if (hash) {
+        showPage(hash);
+        document.querySelector(`a[data-page="${hash}"]`)?.classList.add('active');
+    } else {
+        showPage('home'); // default page
+    }
+});
+
+
+
         
         // Socket connection variable
         let chatSocket = null;
@@ -1270,7 +1314,7 @@ async function loadProfile() {
             if (user) {
                 const balance = user.balance || 0;
                 const tier = user.tier || 0;
-                const profit = balance - 200;
+                const profit = user.profit;
 
                 document.getElementById('total-balance').textContent = `$${balance.toFixed(2)}`;
                 document.getElementById('total-profit').textContent = `$${profit.toFixed(2)}`;
