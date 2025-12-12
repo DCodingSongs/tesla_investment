@@ -29,7 +29,68 @@
             color: white;
             margin: 0;
         }
-        
+        /* TABLET RESPONSIVE FIX (769px–1024px) */
+@media (min-width: 769px) and (max-width: 1024px) {
+
+    /* Reduce sidebar width so it fits */
+    /* .sidebar {
+        width: 200px;
+    } */
+
+    /* Main content should shift correctly */
+    .main-content {
+        margin-left: 200px;
+    }
+
+    /* Adjust top bar padding so it doesn't shrink */
+    .top-bar {
+        padding: 1rem;
+    }
+
+    .welcome-message h1 {
+        font-size: 1.2rem;
+    }
+}
+
+
+        @media (max-width: 768px) {
+
+    /* Sidebar becomes hidden by default */
+    .sidebar {
+        position: fixed;
+        left: -250px;   /* hide off-screen */
+        top: 0;
+        bottom: 0;
+        width: 250px;
+        transition: left 0.3s ease-in-out;
+        z-index: 1000;
+    }
+
+    /* Toggle sidebar when active */
+    .sidebar.open {
+        left: 0;
+    }
+
+    /* Main content becomes full width */
+    .main-content {
+        margin-left: 0 !important;
+        width: 100%;
+    }
+
+    @media (max-width: 767px) {
+    .sidebar {
+        left: -250px;
+    }
+}
+    /* Top bar must stay above sidebar */
+    .top-bar {
+        position: sticky;
+        top: 0;
+        z-index: 1100;
+    }
+}
+       
+
         /* Dashboard Layout */
         .dashboard-layout {
             display: flex;
@@ -37,13 +98,20 @@
         }
 
         .sidebar {
-            width: 250px;
-            background-color: var(--color-background-light);
-            padding: 2rem 1.5rem;
-            display: flex;
-            flex-direction: column;
-            border-right: 1px solid var(--color-border);
-            transition: transform 0.3s ease-in-out;
+           width: 250px;
+    background-color: var(--color-background-light);
+    padding: 2rem 1.5rem;
+    display: flex;
+    flex-direction: column;
+    border-right: 1px solid var(--color-border);
+    transition: transform 0.3s ease-in-out;
+
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    overflow-y: auto;
+            z-index:99999
         }
         
         .sidebar .logo {
@@ -82,23 +150,29 @@
             flex-grow: 1;
             padding: 0; 
             overflow-y: auto;
+            margin-left: 250px; /* same as sidebar width */
+height: 100vh;
+overflow-y: auto;
+position: relative;
+ min-width: 0;
         }
         
         .top-bar {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 1rem 2rem;
-            background-color: #2c3541;
-            border-bottom: 1px solid var(--color-border);
-            position: sticky;
-            top: 0;
-            z-index: 10;
-        }
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 2rem;
+    background-color: #2c3541;
+    border-bottom: 1px solid var(--color-border);
+}
         
         .welcome-message h1 {
             font-size: 1.25rem;
             font-weight: 600;
+            padding-right:16px
         }
         
         .welcome-message span {
@@ -584,7 +658,8 @@
             <div class="top-bar">
                 <div class="welcome-message">
                     <h1>
-                         <span id="welcome-name">Welcome Back.</span>!
+                         <span class>Welcome Back</span>
+                         <span id="welcome-name"></span> 
                     </h1>
                 </div>
                 <div class="user-info-mobile">
@@ -1105,6 +1180,10 @@ window.addEventListener('load', () => {
 
 
 
+
+menuToggle.addEventListener("click", () => {
+    sidebar.classList.toggle("open");
+});
         
         // Socket connection variable
         let chatSocket = null;
@@ -1174,6 +1253,7 @@ window.addEventListener('load', () => {
      // === Improved updateUI + loadProfile for development/learning ===\
 
         function updateUI(name, initials, clientId) {
+            // debugger
             // Safely update all places that show name, avatar, client ID
             document.querySelectorAll('#welcome-name, #user-name').forEach(el => {
                 el.textContent = name || 'Guest';
@@ -1204,6 +1284,13 @@ async function loadProfile() {
 
     if (name && clientId) {
         updateUI(name, initials, clientId);
+    const name = JSON.parse(localStorage.getItem('clientName')|| 'null');
+    const initials =  JSON.parse(localStorage.getItem('clientInitials') ||'null');
+    const clientId =  JSON.parse(localStorage.getItem('clientId') || 'null')
+    const email =  JSON.parse(localStorage.getItem('clientEmail')||'null')
+debugger
+    if (name?.value && clientId?.value) {
+        updateUI(name?.value, initials?.value || name?.value.substring(0,2).toUpperCase(), clientId?.value);
         return; // Success — no need to hit backend
     }
 
