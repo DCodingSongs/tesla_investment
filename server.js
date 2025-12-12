@@ -3,6 +3,10 @@ const http = require('http');
 const socketIo = require('socket.io');
 const jwt = require('jsonwebtoken');
 const bodyParser = require('body-parser');
+const bcrypt = require('bcrypt');
+const initializeDatabase = require('./database');
+
+const saltRounds = 10;
 
 // --- Configuration ---
 const PORT = process.env.PORT || 10000;
@@ -34,12 +38,9 @@ const io = socketIo(server, {
 app.use(bodyParser.json());
 app.use(express.static(__dirname));
 
-// --- Simulated Database (In-Memory) ---
+// --- Database (In-Memory) ---
 // UPDATED ADMIN CREDENTIALS: username: tesla_ai / password: @David081
-const defaultAdmin = { id: 'tesla_ai', name: 'TESLAAI Support', email: 'tesla_ai', password: '@David081', isAdmin: true, balance: 999999, subscribed:true, tier:1 };
-
 // Registered clients are stored here (in-memory, lost on server restart)
-let currentUsers = []; 
 
 // Message history stored by client ID
 // { "client1@example.com": [ {message}, {message} ], "client2@example.com": [...] }
@@ -48,17 +49,41 @@ let activeConnections = {}; // Track currently connected sockets by userId
 
 // --- Helper Functions ---
 
-function findUser(email, password = null) {
-    // 1. Check Admin
-    if (defaultAdmin.email === email && (!password || defaultAdmin.password === password)) {
-        return defaultAdmin;
-    }
-    // 2. Check current clients
-    return currentUsers.find(u => u.email === email && (!password || u.password === password));
+function findUser(db, email, password = null) {
+    return new Promise((resolve, reject) => {
+        db.get('SELECT * FROM users WHERE email = ?', [email], (err, user) => {
+            if (err) {
+                console.error('Database error:', err);
+                return resolve(null);
+            }
+            if (user && password) {
+                bcrypt.compare(password, user.password, (err, result) => {
+                    if (result) {
+                        resolve(user);
+                    } else {
+                        resolve(null);
+                    }
+                });
+            } else if (user && !password) {
+                resolve(user);
+            }
+            else {
+                resolve(null);
+            }
+        });
+    });
 }
 
-function userExists(email) {
-    return defaultAdmin.email === email || currentUsers.some(u => u.email === email);
+function userExists(db, email) {
+    return new Promise((resolve, reject) => {
+        db.get('SELECT 1 FROM users WHERE email = ?', [email], (err, row) => {
+            if (err) {
+                console.error('Database error:', err);
+                return resolve(false);
+            }
+            resolve(!!row);
+        });
+    });
 }
 
 function getTimestamp() {
@@ -91,8 +116,9 @@ io.use((socket, next) => {
 
 // --- Express Authentication Routes (For login.html and register.html) ---
 
-// Placeholder for /api/v1/profile/me
-app.get('/api/v1/profile/me', (req, res) => {
+function initializeRoutes(db) {
+    // Placeholder for /api/v1/profile/me
+    app.get('/api/v1/profile/me', (req, res) => {
     // A simple JWT verification middleware would be needed here in a real app.
     // For this simulation, we'll just extract the token from the header manually.
     const authHeader = req.headers.authorization;
@@ -103,15 +129,13 @@ app.get('/api/v1/profile/me', (req, res) => {
     
     try {
         const decoded = jwt.verify(token, SECRET_KEY);
-        const user = currentUsers.find(u => u.id === decoded.id);
-        
-        if (user) {
+        db.get('SELECT * FROM users WHERE id = ?', [decoded.id], (err, user) => {
+            if (err || !user) {
+                return res.status(404).json({ success: false, message: 'User not found.' });
+            }
             const { password, ...safeUserData } = user;
             return res.json(safeUserData);
-        }
-        
-        return res.status(404).json({ success: false, message: 'User not found.' });
-        
+        });
     } catch (err) {
         return res.status(403).json({ success: false, message: 'Invalid or expired token.' });
     }
@@ -127,29 +151,41 @@ app.post('/api/v1/profile/update', (req, res) => {
     
     try {
         const decoded = jwt.verify(token, SECRET_KEY);
-        const userIndex = currentUsers.findIndex(u => u.id === decoded.id);
-        
-        if (userIndex !== -1) {
-            const user = currentUsers[userIndex];
-            const { name, address, newPassword } = req.body;
+        const { name, address, newPassword } = req.body;
 
-            if (name) user.name = name;
-            if (address) user.address = address;
+        db.get('SELECT * FROM users WHERE id = ?', [decoded.id], (err, user) => {
+            if (err || !user) {
+                return res.status(404).json({ success: false, message: 'User not found.' });
+            }
+
+            const newName = name || user.name;
+            const newAddress = address || user.address;
+
+            const updateUser = (hashedPassword) => {
+                const finalPassword = hashedPassword || user.password;
+                db.run('UPDATE users SET name = ?, address = ?, password = ? WHERE id = ?', [newName, newAddress, finalPassword, decoded.id], function(err) {
+                    if (err) {
+                        return res.status(500).json({ success: false, message: 'Failed to update profile.' });
+                    }
+                    const { password, ...safeUserData } = { ...user, name: newName, address: newAddress };
+                    return res.json({ success: true, message: 'Profile updated.', ...safeUserData });
+                });
+            };
+
             if (newPassword) {
                 if (newPassword.length < 8) {
                     return res.status(400).json({ success: false, message: 'Password must be at least 8 characters.' });
                 }
-                user.password = newPassword; // In a real app, hash this!
+                bcrypt.hash(newPassword, saltRounds, (err, hash) => {
+                    if (err) {
+                        return res.status(500).json({ success: false, message: 'Failed to hash new password.' });
+                    }
+                    updateUser(hash);
+                });
+            } else {
+                updateUser(null);
             }
-            
-            // Overwrite the user object in the array
-            currentUsers[userIndex] = user; 
-            
-            const { password, ...safeUserData } = user;
-            return res.json({ success: true, message: 'Profile updated.', ...safeUserData });
-        }
-        
-        return res.status(404).json({ success: false, message: 'User not found.' });
+        });
         
     } catch (err) {
         return res.status(403).json({ success: false, message: 'Invalid or expired token.' });
@@ -157,11 +193,11 @@ app.post('/api/v1/profile/update', (req, res) => {
 });
 
 
-app.post('/api/v1/auth/login', (req, res) => {
+app.post('/api/v1/auth/login', async (req, res) => {
     const { email, password } = req.body;
     
     console.log(`Login attempt for email: ${email}`);
-    const user = findUser(email, password);
+    const user = await findUser(db, email, password);
 
     if (user) {
         const token = jwt.sign(
@@ -186,46 +222,60 @@ app.post('/api/v1/auth/login', (req, res) => {
     });
 });
 
-app.post('/api/v1/auth/signup', (req, res) => {
+app.post('/api/v1/auth/signup', async (req, res) => {
     const { name, email, password } = req.body;
 
-    if (userExists(email)) {
-        return res.status(400).json({ 
+    if (await userExists(db, email)) {
+        return res.status(400).json({
             success: false,
-            message: 'User already exists with this email address.' 
+            message: 'User already exists with this email address.'
         });
     }
 
-    const newUser = {
-        id: email, 
-        name,
-        email,
-        password,
-        isAdmin: false,
-        balance: 200, // Giving the initial $200 bonus on signup
-        address: ''
-    };
+    bcrypt.hash(password, saltRounds, (err, hash) => {
+        if (err) {
+            return res.status(500).json({ success: false, message: 'Failed to create user.' });
+        }
 
-    currentUsers.push(newUser); 
-    chatHistoryByClient[newUser.id] = []; // Initialize chat history for the new client
+        const newUser = {
+            id: email,
+            name,
+            email,
+            password: hash,
+            isAdmin: false,
+            balance: 200, // Giving the initial $200 bonus on signup
+            address: '',
+            subscribed: false,
+            tier: 0
+        };
 
-    // Token creation happens after successful user creation, but for this client logic we want a separate login
-    
-    const { password: _, ...safeUserData } = newUser; 
-
-    // Return success without the token, forcing them to the login screen
-    return res.status(201).json({
-        success: true,
-        message: 'Sign up successful.',
-        // Token: token, // COMMENTED OUT: Force client to login.html
-        user: safeUserData
+        db.run('INSERT INTO users (id, name, email, password, isAdmin, balance, address, subscribed, tier) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+            [newUser.id, newUser.name, newUser.email, newUser.password, newUser.isAdmin, newUser.balance, newUser.address, newUser.subscribed, newUser.tier],
+            function (err) {
+                if (err) {
+                    return res.status(500).json({ success: false, message: 'Failed to create user.' });
+                }
+                chatHistoryByClient[newUser.id] = []; // Initialize chat history for the new client
+                const { password: _, ...safeUserData } = newUser;
+                return res.status(201).json({
+                    success: true,
+                    message: 'Sign up successful.',
+                    user: safeUserData
+                });
+            }
+        );
     });
 });
+}
 
 
 // --- Socket.IO Connection Logic (Chat Server) ---
 
-io.on('connection', (socket) => {
+let adminUserId;
+
+function initializeServer(db) {
+    initializeRoutes(db);
+    io.on('connection', (socket) => {
     
     let userId;
     // Check for admin status from query, defaults to false if not present or not 'true'
@@ -238,7 +288,7 @@ io.on('connection', (socket) => {
         isAdmin = socket.userData.isAdmin;
     } else if (isAdmin) {
         // Unauthenticated connection identifying as Admin (allowed if admin.html provides the correct key)
-        userId = defaultAdmin.id; 
+        userId = adminUserId;
     } else {
         // Unauthenticated standard client (e.g., just opened the page)
         userId = socket.id; // Fallback to socket ID
@@ -324,7 +374,7 @@ io.on('connection', (socket) => {
             const { clientId, message } = data;
             
             const messageData = {
-                userId: defaultAdmin.id, 
+                userId: adminUserId,
                 message: message,
                 timestamp: getTimestamp(),
                 isAdmin: true
@@ -360,12 +410,30 @@ io.on('connection', (socket) => {
         // *** FIXED: Added backtick (`) to open the template literal ***
         console.log(`[${getTimestamp()}] User disconnected: ${socket.userId}`);
     });
-});
+    });
+}
 
 
 // --- Start Server ---
-server.listen(PORT, () => {
-    console.log(`Chat server listening on port ${PORT}`);
-    // *** FIXED: Added backtick (`) to open the template literal ***
-    console.log(`Deployment successful. Admin ID: ${defaultAdmin.id} | JWT Auth Routes Ready.`);
+initializeDatabase().then(db => {
+    db.get('SELECT id FROM users WHERE isAdmin = ?', [true], (err, row) => {
+        if (err) {
+            console.error('Failed to fetch admin user ID:', err);
+            process.exit(1);
+        }
+        if (row) {
+            adminUserId = row.id;
+            initializeServer(db);
+            server.listen(PORT, () => {
+                console.log(`Chat server listening on port ${PORT}`);
+                console.log(`Deployment successful. Admin ID: ${adminUserId} | JWT Auth Routes Ready.`);
+            });
+        } else {
+            console.error('Admin user not found in the database.');
+            process.exit(1);
+        }
+    });
+}).catch(err => {
+    console.error('Failed to initialize database:', err);
+    process.exit(1);
 });
