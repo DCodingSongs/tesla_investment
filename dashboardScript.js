@@ -1,5 +1,5 @@
 // FIXED: Use window.location.origin for correct deployment API base URL and APPEND the base path
-alert('Dashboard script loaded');
+// alert('Dashboard script loaded');
         const API_BASE_URL = `${window.location.origin}/api/v1`; 
         
         // --- DOM Elements ---
@@ -34,15 +34,15 @@ alert('Dashboard script loaded');
 
 
 
-function showPage(page) {
-    pages.forEach(p => {
-        if (p.id === page) {
-            p.style.display = 'block';
-        } else {
-            p.style.display = 'none';
-        }
-    });
-}
+// function showPage(page) {
+//     pages.forEach(p => {
+//         if (p.id === page) {
+//             p.style.display = 'block';
+//         } else {
+//             p.style.display = 'none';
+//         }
+//     });
+// }
 
 // Load the correct page on refresh
 window.addEventListener('load', () => {
@@ -263,8 +263,9 @@ async function loadProfile() {
         // --- Event Listeners and Initialization ---
 
         document.addEventListener('DOMContentLoaded', () => {
+         
             const sidebar = document.getElementById('sidebar');
-    const menuToggle = document.getElementById('menuToggle');
+            const menuToggle = document.getElementById('menuToggle');
             // 1. Initial Authentication Check and Profile Load
             checkAuth();
             loadProfile();
@@ -280,7 +281,7 @@ async function loadProfile() {
                 const profit = user.totalProfit;
 
                 document.getElementById('total-balance').textContent = `$${balance.toFixed(2)}`;
-                document.getElementById('total-profit').textContent = `$${profit.toFixed(2)}`;
+                // document.getElementById('total-profit').textContent = `$${profit.toFixed(2)}`;
 
                 const tierMap = {
                     1: { name: 'Bronze Tier', amount: 2000 },
@@ -300,7 +301,7 @@ async function loadProfile() {
             // 2. Mobile Menu Toggle
             if (menuToggle && sidebar) {
         menuToggle.addEventListener('click', () => {
-            sidebar.classList.toggle('open');
+            sidebar.classList.toggle('active');
         });
     }
 
@@ -332,8 +333,8 @@ async function loadProfile() {
                     }
 
                     // Mobile Closing Logic
-                  if (window.innerWidth <= 900 && sidebar.classList.contains('open')) {
-    sidebar.classList.remove('open');
+                  if (window.innerWidth <= 900 && sidebar.classList.contains('active')) {
+    sidebar.classList.remove('active');
 }
                 });
             });
