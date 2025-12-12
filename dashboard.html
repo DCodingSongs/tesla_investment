@@ -1096,6 +1096,7 @@ position: relative;
 
     <!-- Smartsupp Live Chat script -->
         <script type="text/javascript">
+          
             var _smartsupp = _smartsupp || {};
             _smartsupp.key = '2f93068f32544226b3307fd94292d88c98fd20f1';
             window.smartsupp||(function(d) {
@@ -1141,52 +1142,6 @@ position: relative;
         const msgConfirm = document.getElementById('msgConfirm');
 
 
-const links = document.querySelectorAll('.sidebar nav a');
-
-
-// When link is clicked
-links.forEach(link => {
-    link.addEventListener('click', function (e) {
-        e.preventDefault();
-
-        const page = this.getAttribute('data-page');
-        window.location.hash = page;  // Update URL
-        showPage(page);
-
-        // Highlight active link
-        links.forEach(a => a.classList.remove('active'));
-        this.classList.add('active');
-    });
-});
-
-
-function showPage(page) {
-    pages.forEach(p => {
-        if (p.id === page) {
-            p.style.display = 'block';
-        } else {
-            p.style.display = 'none';
-        }
-    });
-}
-
-// Load the correct page on refresh
-window.addEventListener('load', () => {
-    const hash = window.location.hash.replace('#', '');
-    if (hash) {
-        showPage(hash);
-        document.querySelector(`a[data-page="${hash}"]`)?.classList.add('active');
-    } else {
-        showPage('home'); // default page
-    }
-});
-
-
-
-
-menuToggle.addEventListener("click", () => {
-    sidebar.classList.toggle("open");
-});
         
         // Socket connection variable
         let chatSocket = null;
@@ -1199,11 +1154,11 @@ menuToggle.addEventListener("click", () => {
             if (!itemStr) return null;
             try {
                 const item = JSON.parse(itemStr);
-                if (Date.now() > item.expiry) {
+                if (Date.now() > item.expiry || 0) {
                     localStorage.removeItem(key);
                     return null;
                 }
-                return item.value;
+                return item.value 
             } catch {
                 localStorage.removeItem(key);
                 return null;
@@ -1214,6 +1169,7 @@ menuToggle.addEventListener("click", () => {
          * Checks for a valid JWT. If missing, redirects to login.
          */
         function checkAuth() {
+            debugger
             const token = getItemWithExpiry('userToken');
             if (!token) {
                 // Not authenticated, redirect to login
@@ -1256,7 +1212,7 @@ menuToggle.addEventListener("click", () => {
      // === Improved updateUI + loadProfile for development/learning ===\
 
         function updateUI(name, initials, clientId) {
-            debugger
+            
             // Safely update all places that show name, avatar, client ID
             document.querySelectorAll('#welcome-name, #user-name').forEach(el => {
                 el.textContent = name || 'Guest';
@@ -1278,15 +1234,16 @@ menuToggle.addEventListener("click", () => {
         }
 
 async function loadProfile() {
+   
     // 1. Try to get data saved by login page (works even without backend)
     const user = JSON.parse(localStorage.getItem('user'));
     const name = user ? user.name : null;
     const initials =  user ? user.name.match(/\b(\w)/g).join('').toUpperCase().substring(0, 2) : null;
     const clientId =  user ? user.id : null;
     const email =  user ? user.email : null;
-
-    if (name && clientId) {
-        updateUI(name, initials, clientId);
+debugger
+    if (name?.value && clientId?.value) {
+        updateUI(name?.value, initials?.value, clientId?.value);
     const name = JSON.parse(localStorage.getItem('clientName')|| 'null');
     const initials =  JSON.parse(localStorage.getItem('clientInitials') ||'null');
     const clientId =  JSON.parse(localStorage.getItem('clientId') || 'null')
@@ -1392,12 +1349,15 @@ async function loadProfile() {
         // --- Event Listeners and Initialization ---
 
         document.addEventListener('DOMContentLoaded', () => {
+            debugger
             // 1. Initial Authentication Check and Profile Load
             checkAuth();
             loadProfile();
             // Show admin links if user is admin
             if (getItemWithExpiry('isAdmin') === true) {
                 document.getElementById('user-management-nav').classList.remove('hidden');
+                document.getElementById('profile-nav').classList.remove('hidden');
+                document.getElementById('chat-nav').classList.remove('hidden');
             }
 
             const user = JSON.parse(localStorage.getItem('user'));
@@ -1666,6 +1626,52 @@ async function loadProfile() {
             }
         });
 }
+const links = document.querySelectorAll('.sidebar nav a');
+
+
+// When link is clicked
+links.forEach(link => {
+    link.addEventListener('click', function (e) {
+        e.preventDefault();
+
+        const page = this.getAttribute('data-page');
+        window.location.hash = page;  // Update URL
+        showPage(page);
+
+        // Highlight active link
+        links.forEach(a => a.classList.remove('active'));
+        this.classList.add('active');
+    });
+});
+
+
+function showPage(page) {
+    pages.forEach(p => {
+        if (p.id === page) {
+            p.style.display = 'block';
+        } else {
+            p.style.display = 'none';
+        }
+    });
+}
+
+// Load the correct page on refresh
+window.addEventListener('load', () => {
+    const hash = window.location.hash.replace('#', '');
+    if (hash) {
+        showPage(hash);
+        document.querySelector(`a[data-page="${hash}"]`)?.classList.add('active');
+    } else {
+        showPage('home'); // default page
+    }
+});
+
+
+
+
+menuToggle.addEventListener("click", () => {
+    sidebar.classList.toggle("open");
+});
     </script>
 </body>
 </html>
