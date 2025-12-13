@@ -155,6 +155,35 @@ io.use((socket, next) => {
 // --- Express Authentication Routes (For login.html and register.html) ---
 
 function initializeRoutes(db) {
+// GET a single user by ID
+app.get('/api/v1/users/:id', (req, res) => {
+    const authHeader = req.headers.authorization;
+    const userIdToFetch = req.params.id;
+
+    if (!authHeader) return res.status(401).json({ success: false, message: 'Authorization required.' });
+    const token = authHeader.split(' ')[1];
+
+    try {
+        const decoded = jwt.verify(token, SECRET_KEY);
+
+        const stmt = db.prepare(
+            'SELECT id, name, email, balance, totalProfit, activeInvestment, nextPayout, tier FROM users WHERE id = ?'
+        );
+        const user = stmt.get(userIdToFetch); 
+
+        if (!user) {
+            return res.status(404).json({ success: false, message: 'User not found.' });
+        }
+
+        return res.json({ success: true, user: user });
+
+    } catch (err) {
+        console.error('API Error:', err);
+        return res.status(403).json({ success: false, message: 'Invalid token.' });
+    }
+});
+
+
     app.get('/api/v1/users', (req, res) => {
         const authHeader = req.headers.authorization;
         if (!authHeader) {

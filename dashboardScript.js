@@ -400,7 +400,49 @@ function showConfirm({ title, message, onConfirm }) {
 
         // --- Event Listeners and Initialization ---
 
-        document.addEventListener('DOMContentLoaded', () => {
+    document.addEventListener('DOMContentLoaded', () => {
+         const token = checkAuth();
+                    if (!token) return;
+
+         async function fetchMe() {
+             const loggedInUser = JSON.parse(localStorage.getItem('user')); // get current user
+            const loggedInUserId = loggedInUser ? loggedInUser.id : null;
+        try {
+    
+                const response = await fetch(`/api/v1/users/${loggedInUserId}`, {
+                 headers: getAuthHeaders(token)
+                    });
+                let data = {};
+            
+                try {
+                    data = await response.json();
+                } catch (jsonError) {
+                    if (!response.ok) {
+                        throw new Error(`Server returned status ${response.status} but no valid error message.`);
+                    }
+                    throw new Error('Server success response (200) was not valid JSON.');
+                }
+                if (response.ok) {
+           
+                if (data.success) {
+                
+                    const user = data.user;
+                    localStorage.setItem('user', JSON.stringify(user));
+                 
+                } 
+             } 
+        
+
+            } catch (error) {
+                console.error('Network or Server Error:', error);
+                
+            } 
+           
+
+         }
+        
+fetchMe()
+  
          
     const isAdmin = getItemWithExpiry('isAdmin');
 
@@ -580,8 +622,8 @@ if(balance){
                     saveProfileBtn.disabled = true;
                     saveProfileBtn.textContent = 'Saving...';
                     
-                    const token = checkAuth();
-                    if (!token) return;
+                    // const token = checkAuth();
+                    // if (!token) return;
                     
                     const newName = nameInput.value.trim();
                     const newAddress = addressInput.value.trim();
@@ -653,6 +695,7 @@ if(balance){
                 const editUserForm = document.getElementById('edit-user-form');
                 const userTableBody = document.getElementById('user-table-body');
                 const closeButtons = document.querySelectorAll('.close-button');
+                
 
                 async function fetchUsers() {
                     const token = getItemWithExpiry('userToken');
