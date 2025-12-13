@@ -298,7 +298,9 @@ function showConfirm({ title, message, onConfirm }) {
         document.addEventListener('DOMContentLoaded', () => {
          
     const isAdmin = getItemWithExpiry('isAdmin');
+
     const userNav = document.getElementById('user-management-nav');
+    const recentActivity = document.getElementById('recent-activity');
     const userPage = document.getElementById('user-management');
 
 
@@ -320,6 +322,7 @@ function showConfirm({ title, message, onConfirm }) {
         historyNav.classList.remove('hidden');
         walletNav.classList.remove('hidden');
         newInvestmentNav.classList.remove('hidden');
+        recentActivity.classList.remove('hidden');
     }
 
     if (!isAdmin || isAdmin == false) {
@@ -521,15 +524,15 @@ function showConfirm({ title, message, onConfirm }) {
                 const editUserForm = document.getElementById('edit-user-form');
                 const userTableBody = document.getElementById('user-table-body');
                 const closeButtons = document.querySelectorAll('.close-button');
-
+debugger
                 async function fetchUsers() {
                     const token = getItemWithExpiry('userToken');
                     const response = await fetch('/api/v1/users', {
                         headers: getAuthHeaders(token)
                     });
-
+debugger
                      const loggedInUser = JSON.parse(localStorage.getItem('user')); // get current user
-    const loggedInUserId = loggedInUser ? loggedInUser.id : null;
+                    const loggedInUserId = loggedInUser ? loggedInUser.id : null;
                     const data = await response.json();
                     
                     if (data.success) {
@@ -562,11 +565,17 @@ function showConfirm({ title, message, onConfirm }) {
                 }
 
                 addUserBtn.addEventListener('click', () => {
+                  
+                    console.log('Add User button clicked');
                     addUserModal.style.display = 'block';
+                 
+
                 });
 
                 closeButtons.forEach(btn => {
                     btn.addEventListener('click', () => {
+                    
+                       
                         addUserModal.style.display = 'none';
                         editUserModal.style.display = 'none';
                     });
