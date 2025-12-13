@@ -405,6 +405,7 @@ function showConfirm({ title, message, onConfirm }) {
                 // document.getElementById('total-profit').textContent = `$${profit.toFixed(2)}`;
 
             document.getElementById('wallet-balance').textContent = `$${balance.toFixed(2)}`;
+            document.getElementById('withdrawal-amount').textContent = `$${balance.toFixed(2)}`;
 
                 const tierMap = {
                     0: { name: 'N/A', amount: 0 },
