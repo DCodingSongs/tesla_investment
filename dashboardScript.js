@@ -19,9 +19,9 @@
         const profileAvatar = document.getElementById('profile-avatar');
         
         // Chat Elements
-        const chatMessages = document.getElementById('chatMessages');
-        const chatInput = document.getElementById('chatInput');
-        const sendMessageButton = document.getElementById('sendMessageButton');
+        // const chatMessages = document.getElementById('chatMessages');
+        // const chatInput = document.getElementById('chatInput');
+        // const sendMessageButton = document.getElementById('sendMessageButton');
 
         // Message box elements
         const messageBox = document.getElementById('messageBox');
@@ -178,93 +178,7 @@ async function loadProfile() {
     // 2. If nothing in localStorage, show dev fallback
     updateUI('Dev User', 'DU', 'TESLA-99999');
 }
-        // --- Chat Functions ---
-        
-        function connectChatSocket() {
-            const token = checkAuth();
-            if (!token) return;
-            
-            // Disconnect any existing socket before connecting
-            if (chatSocket) {
-                chatSocket.disconnect();
-            }
-
-            chatSocket = io(window.location.origin, {
-                query: { token: token }
-            });
-
-            chatSocket.on('connect', () => {
-                console.log('Socket.IO connected as client.');
-                // Request initial history upon connection
-                fetchMessages(); 
-            });
-
-            chatSocket.on('history', (messages) => {
-                chatMessages.innerHTML = '';
-                messages.forEach(renderMessage);
-                chatMessages.scrollTop = chatMessages.scrollHeight;
-            });
-            
-            chatSocket.on('message', (message) => {
-                renderMessage(message);
-                chatMessages.scrollTop = chatMessages.scrollHeight;
-            });
-
-            chatSocket.on('error', (err) => {
-                console.error('Socket Error:', err);
-                showMessageBox('Chat Error', 'Connection lost or unauthorized chat access.', 'error');
-            });
-
-            chatSocket.on('disconnect', () => {
-                console.log('Socket.IO disconnected.');
-            });
-        }
-
-
-        /**
-         * Renders a single message bubble into the chat window.
-         */
-        function renderMessage(message) {
-            const messageElement = document.createElement('div');
-            // Determine class: message.isAdmin is true if it comes from the admin user ID or the system
-            const messageClass = message.isAdmin ? 'admin' : 'client';
-            
-            // Format timestamp
-            const date = new Date(); // Use current time for simplicity, or message.timestamp if server sends full date
-            const timeString = message.timestamp || date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-            
-            messageElement.classList.add('message', messageClass);
-            messageElement.innerHTML = `
-                <div class="message-bubble">${message.message}</div>
-                <div class="message-info">${message.isAdmin  === 1? 'Support' : 'You'} • ${timeString}</div>
-            `;
-            chatMessages.appendChild(messageElement);
-        }
-
-        /**
-         * Sends a new message to the server via socket.
-         */
-        function sendMessage() {
-            const text = chatInput.value.trim();
-            if (!text || !chatSocket || !chatSocket.connected) {
-                showMessageBox('Chat Status', 'Cannot send: Chat is disconnected.', 'error');
-                return;
-            }
-
-            chatSocket.emit('clientMessage', { message: text });
-            chatInput.value = ''; 
-            sendMessageButton.disabled = true; 
-            
-            // Re-enable button after a short delay to simulate network latency
-            setTimeout(() => {
-                 sendMessageButton.disabled = false;
-            }, 500);
-        }
-
-        // Fetch messages is now just for initial load/manual refresh, history is managed by socket 'history' event
-        function fetchMessages() {
-             // If connected, the socket handles history automatically.
-        }
+     
 
         const confirmModal = document.getElementById('confirmModal');
 const confirmTitle = document.getElementById('confirmTitle');
@@ -272,6 +186,115 @@ const confirmMessage = document.getElementById('confirmMessage');
 const confirmOk = document.getElementById('confirmOk');
 const confirmCancel = document.getElementById('confirmCancel');
 
+
+
+
+
+
+
+
+        const userSearchInput1 = document.getElementById('user-search');
+        const userInfoDiv = document.getElementById('user-info');
+        const userNameSpan = document.getElementById('user-name');
+        const userEmailSpan = document.getElementById('user-email');
+        const userBalanceSpan = document.getElementById('user-balance');
+        const confirmPaymentBtn = document.getElementById('confirm-payment-btn');
+        const messageBox1 = document.getElementById('message-box');
+        let currentUser = null;
+
+        function showMessage(text, type = 'error') {
+            messageBox1.textContent = text;
+            messageBox1.classList.remove('hidden', 'bg-red-900', 'bg-green-900', 'text-red-300', 'text-green-300');
+            if (type === 'success') {
+                messageBox1.classList.add('bg-green-900', 'text-green-300');
+            } else {
+                messageBox1.classList.add('bg-red-900', 'text-red-300');
+            }
+            messageBox1.classList.remove('hidden');
+
+
+              setTimeout(() => {
+        messageBox1.classList.add('hidden');
+    }, 3000);
+        }
+
+      if (userSearchInput1) {
+    userSearchInput1.addEventListener('input', async () => {
+        const email = userSearchInput1.value.trim();
+
+        if (email.length < 3) {
+            userInfoDiv?.classList.add('hidden');
+            return;
+        }
+
+        try {
+            const userToken = JSON.parse(localStorage.getItem('userToken'));
+            const token = userToken?.value;
+
+            const response = await fetch(
+                `/api/v1/admin/search-user?email=${encodeURIComponent(email)}`,
+                {
+                    headers: { Authorization: `Bearer ${token}` }
+                }
+            );
+
+            const data = await response.json();
+
+            if (response.ok && data.success) {
+                currentUser = data.user;
+                userNameSpan.textContent = currentUser.name;
+                userEmailSpan.textContent = currentUser.email;
+                userBalanceSpan.textContent = currentUser.balance;
+                userInfoDiv.classList.remove('hidden');
+            } else {
+                userInfoDiv.classList.add('hidden');
+            }
+        } catch (err) {
+            console.error(err);
+            userInfoDiv?.classList.add('hidden');
+        }
+    });
+}
+
+if (confirmPaymentBtn) {
+    
+    confirmPaymentBtn.addEventListener('click', async () => {
+        
+        if (!currentUser) return;
+
+        try {
+            const userToken = JSON.parse(localStorage.getItem('userToken'));
+            const token = userToken?.value;
+
+            const response = await fetch('/api/v1/admin/confirm-payment', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${token}`
+                },
+                body: JSON.stringify({ userId: currentUser.id })
+            });
+
+            const data = await response.json();
+
+            if (response.ok && data.success) {
+                showMessage('Payment confirmed successfully.', 'success');
+                userSearchInput1.value = '';
+                userInfoDiv.classList.add('hidden');
+                
+                userBalanceSpan.textContent = data.newBalance;
+            } else {
+                showMessage(data.message || 'Failed to confirm payment', 'error');
+            }
+        } catch (err) {
+            console.error(err);
+            showMessage('Network error', 'error');
+        }
+    });
+}
+
+
+      
 function showConfirm({ title, message, onConfirm }) {
     confirmTitle.textContent = title || 'Confirm';
     confirmMessage.textContent = message || 'Are you sure?';
@@ -301,6 +324,7 @@ function showConfirm({ title, message, onConfirm }) {
 
     const userNav = document.getElementById('user-management-nav');
     const recentActivity = document.getElementById('recent-activity');
+    const adminConfirmNav = document.getElementById('admin-confirm-nav');
     const userPage = document.getElementById('user-management');
 
 
@@ -316,6 +340,7 @@ function showConfirm({ title, message, onConfirm }) {
 
     if (isAdmin|| isAdmin == 1) {
         userNav.classList.remove('hidden');
+        adminConfirmNav.classList.remove('hidden');
        
     } else {
         userNav.classList.add('hidden');
@@ -418,14 +443,18 @@ function showConfirm({ title, message, onConfirm }) {
                         targetPage.classList.remove('hidden');
                         
                         // Special: If navigating to Chat, connect the socket
-                        if (targetPageId === 'chat') {
-                            connectChatSocket();
-                        } else {
-                            // Disconnect when navigating away from chat
-                            if (chatSocket) {
-                                chatSocket.disconnect();
-                                chatSocket = null;
-                            }
+                        // if (targetPageId === 'chat') {
+                        //     connectChatSocket();
+                        // } else {
+                        //     // Disconnect when navigating away from chat
+                        //     if (chatSocket) {
+                        //         chatSocket.disconnect();
+                        //         chatSocket = null;
+                        //     }
+                        // }
+
+                        if (targetPageId === 'history') {
+                            fetchHistory();
                         }
                     }
 
@@ -504,19 +533,23 @@ function showConfirm({ title, message, onConfirm }) {
             }
             
             // 6. Chat Message Sending Handlers
-            if (sendMessageButton) {
-                sendMessageButton.addEventListener('click', sendMessage);
-                chatInput.addEventListener('keypress', (e) => {
-                    if (e.key === 'Enter') {
-                        e.preventDefault(); // Prevent form submission if input is wrapped in form
-                        sendMessage();
-                    }
-                });
-            }
+
+            // 6. Chat Message Sending Handlers
+            // if (sendMessageButton) {
+            //     sendMessageButton.addEventListener('click', sendMessage);
+            //     chatInput.addEventListener('keypress', (e) => {
+            //         if (e.key === 'Enter') {
+            //             e.preventDefault(); // Prevent form submission if input is wrapped in form
+            //             sendMessage();
+            //         }
+            //     });
+            // }
 
             // --- Admin User Management ---
             const userManagementPage = document.getElementById('user-management');
             if (userManagementPage) {
+                let allUsers = [];
+                const userSearchInput = document.getElementById('user-search-input');
                 const addUserBtn = document.getElementById('add-user-btn');
                 const addUserModal = document.getElementById('add-user-modal');
                 const editUserModal = document.getElementById('edit-user-modal');
@@ -536,6 +569,7 @@ debugger
                     const data = await response.json();
                     
                     if (data.success) {
+                        allUsers = data.users.filter(user => user?.id !== loggedInUserId);
                             const tierMap = {
                             0: 'N/A',
                             1: 'Bronze Tier',
@@ -563,6 +597,43 @@ debugger
                         });
                     }
                 }
+
+                function renderUsers(users) {
+                    const tierMap = {
+                        0: 'N/A',
+                        1: 'Bronze Tier',
+                        2: 'Silver Tier',
+                        3: 'Gold Tier',
+                        4: 'Platinum Tier',
+                        5: 'Diamond Tier',
+                        6: 'Centurion Tier'
+                    };
+                    userTableBody.innerHTML = '';
+                    users.forEach(user => {
+                        const tierName = tierMap[user.tier] || 'N/A';
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>${user.name}</td>
+                            <td>${user.email}</td>
+                            <td>${formatCurrency(user.balance)}</td>
+                            <td>${tierName}</td>
+                            <td>
+                                <button class="edit-btn" data-id="${user.id}">Edit</button>
+                                <button class="delete-btn" data-id="${user.id}">Delete</button>
+                            </td>
+                        `;
+                        userTableBody.appendChild(row);
+                    });
+                }
+
+                userSearchInput.addEventListener('input', () => {
+                    const searchTerm = userSearchInput.value.toLowerCase();
+                    const filteredUsers = allUsers.filter(user =>
+                        user.name.toLowerCase().includes(searchTerm) ||
+                        user.email.toLowerCase().includes(searchTerm)
+                    );
+                    renderUsers(filteredUsers);
+                });
 
                 addUserBtn.addEventListener('click', () => {
                   
@@ -673,6 +744,34 @@ debugger
                     fetchUsers();
                 }
             }
+
+            async function fetchHistory() {
+                const token = getItemWithExpiry('userToken');
+                const response = await fetch('/api/v1/subscriptions', {
+                    headers: getAuthHeaders(token)
+                });
+                const data = await response.json();
+                if (data.success) {
+                    const historyTableBody = document.getElementById('history-table-body');
+                    const dashboardHistoryTableBody = document.getElementById('dashboard-history-table-body');
+
+                    if(historyTableBody) historyTableBody.innerHTML = '';
+                    if(dashboardHistoryTableBody) dashboardHistoryTableBody.innerHTML = '';
+
+                    data.subscriptions.forEach(sub => {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td style="border: 1px solid var(--color-border); padding: 12px;">${sub.date}</td>
+                            <td style="border: 1px solid var(--color-border); padding: 12px;">${sub.type}</td>
+                            <td style="border: 1px solid var(--color-border); padding: 12px;">${formatCurrency(sub.amount)}</td>
+                        `;
+                        if(historyTableBody) historyTableBody.appendChild(row.cloneNode(true));
+                        if(dashboardHistoryTableBody) dashboardHistoryTableBody.appendChild(row);
+                    });
+                }
+            }
+
+            fetchHistory();
             
             // Ensure the initial page is displayed correctly (Home)
             const initialPageLink = document.querySelector('.sidebar nav a.active');

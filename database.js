@@ -24,6 +24,25 @@ function initializeDatabase() {
       )
     `).run();
 
+    db.prepare(`
+      CREATE TABLE IF NOT EXISTS password_resets (
+        email TEXT PRIMARY KEY,
+        token TEXT NOT NULL,
+        expires INTEGER NOT NULL
+      )
+    `).run();
+
+    db.prepare(`
+        CREATE TABLE IF NOT EXISTS subscriptions (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            userId TEXT NOT NULL,
+            date TEXT NOT NULL,
+            amount REAL NOT NULL,
+            type TEXT NOT NULL,
+            FOREIGN KEY (userId) REFERENCES users(id)
+        )
+    `).run();
+
     // Default admin values
     const defaultAdmin = {
       id: 'tesla_aiw',

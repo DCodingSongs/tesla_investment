@@ -214,26 +214,13 @@
             </div>
         </div>
 
-        <div class="chat-panel">
-            <div id="chatHeader" class="chat-header">
-                Select a client to start chatting...
-            </div>
-            <div id="chatMessages" class="chat-messages">
-                <!-- Messages injected here -->
-            </div>
-            <div id="chatInputArea" class="chat-input hidden">
-                <input type="text" id="adminReplyInput" placeholder="Type your reply...">
-                <button id="sendReplyBtn">
-                    <i class="fas fa-paper-plane"></i> Send
-                </button>
-            </div>
-        </div>
+        <!-- <div class="chat-panel">
+        </div> -->
 
     </div>
 
     <script>
         const API_BASE_URL = window.location.origin;
-        // The Admin Key MUST match the hardcoded SECRET_KEY in server.js for security (even in memory)
         const ADMIN_SECRET_KEY = 'a-very-secret-key-that-must-be-long-and-secure'; 
         
         // DOM Elements

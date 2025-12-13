@@ -121,11 +121,14 @@
                 const data = await response.json();
 
                 if (response.ok && data.success) {
-                    showMessage('Registration successful! Redirecting to login...', 'success');        
-                    setTimeout(() => {
-                        window.location.href = 'login.html';
-                    }, 500); 
-
+                    showMessage('Registration successful! Redirecting to login...', 'success');
+                    if (data.redirect) {
+                        window.location.href = data.redirect;
+                    } else {
+                        setTimeout(() => {
+                            window.location.href = 'login.html';
+                        }, 500);
+                    }
                 } else {
                     showMessage(data.message || 'Registration failed. User may already exist.');
                 }
