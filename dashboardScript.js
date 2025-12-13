@@ -298,7 +298,9 @@ function showConfirm({ title, message, onConfirm }) {
         document.addEventListener('DOMContentLoaded', () => {
          
     const isAdmin = getItemWithExpiry('isAdmin');
+
     const userNav = document.getElementById('user-management-nav');
+    const recentActivity = document.getElementById('recent-activity');
     const userPage = document.getElementById('user-management');
 
 
@@ -320,6 +322,7 @@ function showConfirm({ title, message, onConfirm }) {
         historyNav.classList.remove('hidden');
         walletNav.classList.remove('hidden');
         newInvestmentNav.classList.remove('hidden');
+        recentActivity.classList.remove('hidden');
     }
 
     if (!isAdmin || isAdmin == false) {
