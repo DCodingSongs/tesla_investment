@@ -663,10 +663,14 @@ function showConfirm({ title, message, onConfirm }) {
                     const name = document.getElementById('add-name').value;
                     const email = document.getElementById('add-email').value;
                     const password = document.getElementById('add-password').value;
+                    const balance = document.getElementById('add-balance').value;
+                    const totalProfit = document.getElementById('add-total-profit').value;
+                    const activeInvestment = document.getElementById('add-active-investment').value;
+                    const nextPayout = document.getElementById('add-next-payout').value;
                     const response = await fetch('/api/v1/users', {
                         method: 'POST',
                         headers: getAuthHeaders(token),
-                        body: JSON.stringify({ name, email, password })
+                        body: JSON.stringify({ name, email, password, balance, totalProfit, activeInvestment, nextPayout })
                     });
                     const data = await response.json();
                     if (data.success) {
