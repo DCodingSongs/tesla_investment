@@ -25,6 +25,20 @@ const io = socketIo(server, {
     }
 });
 
+function generateTAINumber() {
+    // Generate a random number between 0 and 999999
+    let num = Math.floor(Math.random() * 1000000);
+    
+    // Pad with leading zeros to make it 6 digits
+    let padded = num.toString().padStart(6, '0');
+
+    return padded;
+}
+
+// Example usage:
+const taiId = `TAI-${generateTAINumber()}`;
+
+
 
 
 // app.use(cors({
@@ -199,7 +213,7 @@ function initializeRoutes(db) {
             }
             const hash = await bcrypt.hash(password, saltRounds);
             const newUser = {
-                id: email,
+                id: `TAI-${generateTAINumber()}`,
                 name,
                 email,
                 password: hash,
