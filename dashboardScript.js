@@ -771,47 +771,47 @@ function showConfirm({ title, message, onConfirm }) {
 
                 userTableBody.addEventListener('click', async (e) => {
                     const token = getItemWithExpiry('userToken');
-                if (e.target.classList.contains('delete-btn')) {
-        const id = e.target.dataset.id;
-
-        // Show confirmation modal before deletion
-        showConfirm({
-            title: 'Delete User',
-            message: 'Are you sure you want to delete this user?',
-            onConfirm: async () => {
-                try {
-                    const response = await fetch(`/api/v1/users/${id}`, {
-                        method: 'DELETE',
-                        headers: getAuthHeaders(token)
-                    });
-                    const data = await response.json();
-
-                    if (data.success) {
-                        showMessageBox('Success', 'User deleted successfully.', 'success');
-                        fetchUsers(); // Refresh user table
-                    } else {
-                        showMessageBox('Error', data.message || 'Failed to delete user.', 'error');
-                    }
-                } catch (err) {
-                    console.error('Deletion error:', err);
-                    showMessageBox('Error', 'Network error: could not delete user.', 'error');
-                }
-            }
-        });
-    } else if (e.target.classList.contains('edit-btn')) {
-                        const row = e.target.closest('tr');
+                    if (e.target.classList.contains('delete-btn')) {
                         const id = e.target.dataset.id;
-                        const name = row.cells[0].textContent;
-                        const email = row.cells[1].textContent;
-                        const balance = row.cells[2].textContent;
-                        const tier = row.cells[3].textContent;
 
-                        document.getElementById('edit-user-id').value = id;
-                        document.getElementById('edit-name').value = name;
-                        document.getElementById('edit-email').value = email;
-                        document.getElementById('edit-balance').value = balance;
-                        document.getElementById('edit-tier').value = tier;
-                        editUserModal.style.display = 'block';
+                        // Show confirmation modal before deletion
+                        showConfirm({
+                            title: 'Delete User',
+                            message: 'Are you sure you want to delete this user?',
+                            onConfirm: async () => {
+                                try {
+                                    const response = await fetch(`/api/v1/users/${id}`, {
+                                        method: 'DELETE',
+                                        headers: getAuthHeaders(token)
+                                    });
+                                    const data = await response.json();
+
+                                    if (data.success) {
+                                        showMessageBox('Success', 'User deleted successfully.', 'success');
+                                        fetchUsers(); // Refresh user table
+                                    } else {
+                                        showMessageBox('Error', data.message || 'Failed to delete user.', 'error');
+                                    }
+                                } catch (err) {
+                                    console.error('Deletion error:', err);
+                                    showMessageBox('Error', 'Network error: could not delete user.', 'error');
+                                }
+                            }
+                        });
+                    } else if (e.target.classList.contains('edit-btn')) {
+                        const id = e.target.dataset.id;
+                        const user = allUsers.find(u => u.id === id);
+                        if (user) {
+                            document.getElementById('edit-user-id').value = user.id;
+                            document.getElementById('edit-name').value = user.name;
+                            document.getElementById('edit-email').value = user.email;
+                            document.getElementById('edit-balance').value = user.balance;
+                            document.getElementById('edit-total-profit').value = user.totalProfit;
+                            document.getElementById('edit-active-investment').value = user.activeInvestment;
+                            document.getElementById('edit-next-payout').value = user.nextPayout;
+                            document.getElementById('edit-tier').value = user.tier;
+                            editUserModal.style.display = 'block';
+                        }
                     }
                 });
 
@@ -822,11 +822,14 @@ function showConfirm({ title, message, onConfirm }) {
                     const name = document.getElementById('edit-name').value;
                     const email = document.getElementById('edit-email').value;
                     const balance = document.getElementById('edit-balance').value;
+                    const totalProfit = document.getElementById('edit-total-profit').value;
+                    const activeInvestment = document.getElementById('edit-active-investment').value;
+                    const nextPayout = document.getElementById('edit-next-payout').value;
                     const tier = document.getElementById('edit-tier').value;
                     await fetch(`/api/v1/users/${id}`, {
                         method: 'PUT',
                         headers: getAuthHeaders(token),
-                        body: JSON.stringify({ name, email, balance, tier })
+                        body: JSON.stringify({ name, email, balance, totalProfit, activeInvestment, nextPayout, tier })
                     });
                     editUserModal.style.display = 'none';
                     fetchUsers();

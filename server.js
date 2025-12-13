@@ -171,7 +171,7 @@ function initializeRoutes(db) {
             
            try {
      const stmt = db.prepare(
-        'SELECT id, name, email, balance, tier FROM users'
+        'SELECT id, name, email, balance, totalProfit, activeInvestment, nextPayout, tier FROM users'
     );
 
     const rows = stmt.all(); // synchronous
@@ -248,9 +248,9 @@ function initializeRoutes(db) {
             if (!decoded.isAdmin) {
                 return res.status(403).json({ success: false, message: 'Forbidden.' });
             }
-            const { name, email, balance, tier } = req.body;
+            const { name, email, balance, totalProfit, activeInvestment, nextPayout, tier } = req.body;
             // console.log('Updating user:', req.params.id, name, email, balance, tier);
-            db.prepare('UPDATE users SET name = ?, email = ?, balance = ?, tier = ? WHERE id = ?').run(name, email, balance, tier, req.params.id);
+            db.prepare('UPDATE users SET name = ?, email = ?, balance = ?, totalProfit = ?, activeInvestment = ?, nextPayout = ?, tier = ? WHERE id = ?').run(name, email, balance, totalProfit, activeInvestment, nextPayout, tier, req.params.id);
             res.json({ success: true });
         } catch (err) {
             return res.status(403).json({ success: false, message: 'Invalid or expired token.' });

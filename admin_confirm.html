@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -68,105 +69,105 @@
     </div>
 
     <script>
-        const API_BASE_URL = window.location.origin;
-        const userSearchInput = document.getElementById('user-search');
-        const userInfoDiv = document.getElementById('user-info');
-        const userNameSpan = document.getElementById('user-name');
-        const userEmailSpan = document.getElementById('user-email');
-        const userBalanceSpan = document.getElementById('user-balance');
-        const updateUserForm = document.getElementById('update-user-form');
-        const messageBox = document.getElementById('message-box');
-        let currentUser = null;
-
-        function showMessage(text, type = 'error') {
-            messageBox.textContent = text;
-            messageBox.classList.remove('hidden', 'bg-red-900', 'bg-green-900', 'text-red-300', 'text-green-300');
-            if (type === 'success') {
-                messageBox.classList.add('bg-green-900', 'text-green-300');
-            } else {
-                messageBox.classList.add('bg-red-900', 'text-red-300');
-            }
-            messageBox.classList.remove('hidden');
-        }
-
-        userSearchInput.addEventListener('input', async () => {
-            const email = userSearchInput.value.trim();
-            if (email.length < 3) {
-                userInfoDiv.classList.add('hidden');
-                return;
-            }
-
-            try {
-                const userToken = JSON.parse(localStorage.getItem('userToken'));
-                const token = userToken ? userToken.value : null;
-                const response = await fetch(`/api/v1/admin/search-user?email=${email}`, {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-                const data = await response.json();
-                if (response.ok && data.success) {
-                    currentUser = data.user;
-                    userNameSpan.textContent = currentUser.name;
-                    userEmailSpan.textContent = currentUser.email;
-                    userBalanceSpan.textContent = currentUser.balance;
-                    // Pre-fill form fields with existing data if available
-                    document.getElementById('total-balance').value = currentUser.balance || '';
-                    document.getElementById('total-profit').value = currentUser.totalProfit || '';
-                    document.getElementById('active-investment').value = currentUser.activeInvestment || '';
-                    document.getElementById('next-payout').value = currentUser.nextPayout || '';
-                    userInfoDiv.classList.remove('hidden');
-                } else {
-                    userInfoDiv.classList.add('hidden');
-                }
-            } catch (error) {
-                console.error('Error searching for user:', error);
-                userInfoDiv.classList.add('hidden');
-            }
-        });
-
-        updateUserForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            if (!currentUser) return;
-
-            const updatedData = {
-                userId: currentUser.id,
-                balance: document.getElementById('total-balance').value,
-                totalProfit: document.getElementById('total-profit').value,
-                activeInvestment: document.getElementById('active-investment').value,
-                nextPayout: document.getElementById('next-payout').value
-            };
-
-            try {
-                const userToken = JSON.parse(localStorage.getItem('userToken'));
-                const token = userToken ? userToken.value : null;
-                const response = await fetch('/api/v1/admin/confirm-payment', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${token}`
-                    },
-                    body: JSON.stringify(updatedData)
-                });
-                const data = await response.json();
-                if (response.ok && data.success) {
-                    userSearchInput.value = '';
-                    userInfoDiv.classList.add('hidden');
-                    currentUser = null;
-                    showMessage('Payment confirmed and user updated successfully.', 'success');
-                } else {
-                    showMessage(data.message || 'Failed to update user.', 'error');
-                }
-            } catch (error) {
-                console.error('Error updating user:', error);
-                showMessage('An error occurred while updating the user.', 'error');
-            }
-        });
-
-        // Basic admin auth check
         document.addEventListener('DOMContentLoaded', () => {
+            // Basic admin auth check
             const user = JSON.parse(localStorage.getItem('user'));
             if (!user || !user.isAdmin) {
                 window.location.href = 'login.html';
+                return;
             }
+
+            const API_BASE_URL = window.location.origin;
+            const userSearchInput = document.getElementById('user-search');
+            const userInfoDiv = document.getElementById('user-info');
+            const userNameSpan = document.getElementById('user-name');
+            const userEmailSpan = document.getElementById('user-email');
+            const userBalanceSpan = document.getElementById('user-balance');
+            const updateUserForm = document.getElementById('update-user-form');
+            const messageBox = document.getElementById('message-box');
+            let currentUser = null;
+
+            function showMessage(text, type = 'error') {
+                messageBox.textContent = text;
+                messageBox.classList.remove('hidden', 'bg-red-900', 'bg-green-900', 'text-red-300', 'text-green-300');
+                if (type === 'success') {
+                    messageBox.classList.add('bg-green-900', 'text-green-300');
+                } else {
+                    messageBox.classList.add('bg-red-900', 'text-red-300');
+                }
+                messageBox.classList.remove('hidden');
+            }
+
+            userSearchInput.addEventListener('input', async () => {
+                const email = userSearchInput.value.trim();
+                if (email.length < 3) {
+                    userInfoDiv.classList.add('hidden');
+                    return;
+                }
+
+                try {
+                    const userToken = JSON.parse(localStorage.getItem('userToken'));
+                    const token = userToken ? userToken.value : null;
+                    const response = await fetch(`/api/v1/admin/search-user?email=${email}`, {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
+                    const data = await response.json();
+                    if (response.ok && data.success) {
+                        currentUser = data.user;
+                        userNameSpan.textContent = currentUser.name;
+                        userEmailSpan.textContent = currentUser.email;
+                        userBalanceSpan.textContent = currentUser.balance;
+                        document.getElementById('total-balance').value = currentUser.balance || '';
+                        document.getElementById('total-profit').value = currentUser.totalProfit || '';
+                        document.getElementById('active-investment').value = currentUser.activeInvestment || '';
+                        document.getElementById('next-payout').value = currentUser.nextPayout || '';
+                        userInfoDiv.classList.remove('hidden');
+                    } else {
+                        userInfoDiv.classList.add('hidden');
+                    }
+                } catch (error) {
+                    console.error('Error searching for user:', error);
+                    userInfoDiv.classList.add('hidden');
+                }
+            });
+
+            updateUserForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                if (!currentUser) return;
+
+                const updatedData = {
+                    userId: currentUser.id,
+                    balance: document.getElementById('total-balance').value,
+                    totalProfit: document.getElementById('total-profit').value,
+                    activeInvestment: document.getElementById('active-investment').value,
+                    nextPayout: document.getElementById('next-payout').value
+                };
+
+                try {
+                    const userToken = JSON.parse(localStorage.getItem('userToken'));
+                    const token = userToken ? userToken.value : null;
+                    const response = await fetch('/api/v1/admin/confirm-payment', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${token}`
+                        },
+                        body: JSON.stringify(updatedData)
+                    });
+                    const data = await response.json();
+                    if (response.ok && data.success) {
+                        userSearchInput.value = '';
+                        userInfoDiv.classList.add('hidden');
+                        currentUser = null;
+                        showMessage('Payment confirmed and user updated successfully.', 'success');
+                    } else {
+                        showMessage(data.message || 'Failed to update user.', 'error');
+                    }
+                } catch (error) {
+                    console.error('Error updating user:', error);
+                    showMessage('An error occurred while updating the user.', 'error');
+                }
+            });
         });
     </script>
 </body>

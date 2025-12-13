@@ -105,17 +105,6 @@
     </div>
 
     <script>
-          document.addEventListener('DOMContentLoaded', () => {
-            debugger
-             const user = JSON.parse(localStorage.getItem('user'));
-            debugger
-            if (user) {
-                const balance = user.balance || 0;
-                const tier = user.tier || 0;
-                const profit = user.totalProfit;
-            document.getElementById('withdrawal-amount').textContent = `$${balance.toFixed(2)}`
-            }   
-          })
         document.getElementById('withdraw-form').addEventListener('submit', function(e) {
             e.preventDefault(); // Stop default form submission
 
@@ -132,7 +121,6 @@
             // Switch interface
             document.getElementById('withdraw-form-interface').classList.add('hidden');
             document.getElementById('withdrawal-confirmation').classList.remove('hidden');
-                    
         });
     </script>
 </body>
