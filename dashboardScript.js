@@ -178,93 +178,7 @@ async function loadProfile() {
     // 2. If nothing in localStorage, show dev fallback
     updateUI('Dev User', 'DU', 'TESLA-99999');
 }
-        // --- Chat Functions ---
-        
-        // function connectChatSocket() {
-        //     const token = checkAuth();
-        //     if (!token) return;
-            
-        //     // Disconnect any existing socket before connecting
-        //     if (chatSocket) {
-        //         chatSocket.disconnect();
-        //     }
-
-        //     chatSocket = io(window.location.origin, {
-        //         query: { token: token }
-        //     });
-
-        //     chatSocket.on('connect', () => {
-        //         console.log('Socket.IO connected as client.');
-        //         // Request initial history upon connection
-        //         fetchMessages();
-        //     });
-
-        //     chatSocket.on('history', (messages) => {
-        //         chatMessages.innerHTML = '';
-        //         messages.forEach(renderMessage);
-        //         chatMessages.scrollTop = chatMessages.scrollHeight;
-        //     });
-            
-        //     chatSocket.on('message', (message) => {
-        //         renderMessage(message);
-        //         chatMessages.scrollTop = chatMessages.scrollHeight;
-        //     });
-
-        //     chatSocket.on('error', (err) => {
-        //         console.error('Socket Error:', err);
-        //         showMessageBox('Chat Error', 'Connection lost or unauthorized chat access.', 'error');
-        //     });
-
-        //     chatSocket.on('disconnect', () => {
-        //         console.log('Socket.IO disconnected.');
-        //     });
-        // }
-
-
-        /**
-         * Renders a single message bubble into the chat window.
-         */
-        // function renderMessage(message) {
-        //     const messageElement = document.createElement('div');
-        //     // Determine class: message.isAdmin is true if it comes from the admin user ID or the system
-        //     const messageClass = message.isAdmin ? 'admin' : 'client';
-            
-        //     // Format timestamp
-        //     const date = new Date(); // Use current time for simplicity, or message.timestamp if server sends full date
-        //     const timeString = message.timestamp || date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-            
-        //     messageElement.classList.add('message', messageClass);
-        //     messageElement.innerHTML = `
-        //         <div class="message-bubble">${message.message}</div>
-        //         <div class="message-info">${message.isAdmin  === 1? 'Support' : 'You'} • ${timeString}</div>
-        //     `;
-        //     chatMessages.appendChild(messageElement);
-        // }
-
-        /**
-         * Sends a new message to the server via socket.
-         */
-        // function sendMessage() {
-        //     const text = chatInput.value.trim();
-        //     if (!text || !chatSocket || !chatSocket.connected) {
-        //         showMessageBox('Chat Status', 'Cannot send: Chat is disconnected.', 'error');
-        //         return;
-        //     }
-
-        //     chatSocket.emit('clientMessage', { message: text });
-        //     chatInput.value = '';
-        //     sendMessageButton.disabled = true;
-            
-        //     // Re-enable button after a short delay to simulate network latency
-        //     setTimeout(() => {
-        //          sendMessageButton.disabled = false;
-        //     }, 500);
-        // }
-
-        // Fetch messages is now just for initial load/manual refresh, history is managed by socket 'history' event
-        // function fetchMessages() {
-        //      // If connected, the socket handles history automatically.
-        // }
+     
 
         const confirmModal = document.getElementById('confirmModal');
 const confirmTitle = document.getElementById('confirmTitle');
@@ -272,6 +186,115 @@ const confirmMessage = document.getElementById('confirmMessage');
 const confirmOk = document.getElementById('confirmOk');
 const confirmCancel = document.getElementById('confirmCancel');
 
+
+
+
+
+
+
+
+        const userSearchInput1 = document.getElementById('user-search');
+        const userInfoDiv = document.getElementById('user-info');
+        const userNameSpan = document.getElementById('user-name');
+        const userEmailSpan = document.getElementById('user-email');
+        const userBalanceSpan = document.getElementById('user-balance');
+        const confirmPaymentBtn = document.getElementById('confirm-payment-btn');
+        const messageBox1 = document.getElementById('message-box');
+        let currentUser = null;
+
+        function showMessage(text, type = 'error') {
+            messageBox1.textContent = text;
+            messageBox1.classList.remove('hidden', 'bg-red-900', 'bg-green-900', 'text-red-300', 'text-green-300');
+            if (type === 'success') {
+                messageBox1.classList.add('bg-green-900', 'text-green-300');
+            } else {
+                messageBox1.classList.add('bg-red-900', 'text-red-300');
+            }
+            messageBox1.classList.remove('hidden');
+
+
+              setTimeout(() => {
+        messageBox1.classList.add('hidden');
+    }, 3000);
+        }
+
+      if (userSearchInput1) {
+    userSearchInput1.addEventListener('input', async () => {
+        const email = userSearchInput1.value.trim();
+
+        if (email.length < 3) {
+            userInfoDiv?.classList.add('hidden');
+            return;
+        }
+
+        try {
+            const userToken = JSON.parse(localStorage.getItem('userToken'));
+            const token = userToken?.value;
+
+            const response = await fetch(
+                `/api/v1/admin/search-user?email=${encodeURIComponent(email)}`,
+                {
+                    headers: { Authorization: `Bearer ${token}` }
+                }
+            );
+
+            const data = await response.json();
+
+            if (response.ok && data.success) {
+                currentUser = data.user;
+                userNameSpan.textContent = currentUser.name;
+                userEmailSpan.textContent = currentUser.email;
+                userBalanceSpan.textContent = currentUser.balance;
+                userInfoDiv.classList.remove('hidden');
+            } else {
+                userInfoDiv.classList.add('hidden');
+            }
+        } catch (err) {
+            console.error(err);
+            userInfoDiv?.classList.add('hidden');
+        }
+    });
+}
+
+if (confirmPaymentBtn) {
+    
+    confirmPaymentBtn.addEventListener('click', async () => {
+        
+        if (!currentUser) return;
+
+        try {
+            const userToken = JSON.parse(localStorage.getItem('userToken'));
+            const token = userToken?.value;
+
+            const response = await fetch('/api/v1/admin/confirm-payment', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${token}`
+                },
+                body: JSON.stringify({ userId: currentUser.id })
+            });
+
+            const data = await response.json();
+
+            if (response.ok && data.success) {
+                showMessage('Payment confirmed successfully.', 'success');
+                userSearchInput1.value = '';
+                userInfoDiv.classList.add('hidden');
+                
+                userBalanceSpan.textContent = data.newBalance;
+            } else {
+                showMessage(data.message || 'Failed to confirm payment', 'error');
+            }
+        } catch (err) {
+            console.error(err);
+            showMessage('Network error', 'error');
+        }
+    });
+}
+
+
+      
 function showConfirm({ title, message, onConfirm }) {
     confirmTitle.textContent = title || 'Confirm';
     confirmMessage.textContent = message || 'Are you sure?';

@@ -99,6 +99,7 @@
         });
 
         confirmPaymentBtn.addEventListener('click', async () => {
+            debugger
             if (!currentUser) return;
 
             try {
@@ -113,13 +114,20 @@
                     body: JSON.stringify({ userId: currentUser.id })
                 });
                 const data = await response.json();
+                debugger
                 if (response.ok && data.success) {
+                    debugger
+
+                    userSearchInput1.value = '';
+                userInfoDiv.classList.add('hidden');
+                currentUser = null;
                     showMessage('Payment confirmed successfully.', 'success');
                     userBalanceSpan.textContent = data.newBalance;
                 } else {
                     showMessage(data.message || 'Failed to confirm payment.', 'error');
                 }
             } catch (error) {
+                debugger
                 console.error('Error confirming payment:', error);
                 showMessage('An error occurred while confirming payment.', 'error');
             }
