@@ -54,7 +54,7 @@ function findUser(db, email, password = null) {
     try {
         // synchronous query to get the user by email
         const user = db.prepare('SELECT * FROM users WHERE email = ?').get(email);
-        console.log('User lookup for email:', email, 'Found:', !!user);
+   
 
         if (!user) return Promise.resolve(null);
 
@@ -126,17 +126,35 @@ function initializeRoutes(db) {
             return res.status(401).json({ success: false, message: 'Authorization header required.' });
         }
         const token = authHeader.split(' ')[1];
+    
         try {
             const decoded = jwt.verify(token, SECRET_KEY);
+            
             if (!decoded.isAdmin) {
                 return res.status(403).json({ success: false, message: 'Forbidden.' });
             }
-            db.all('SELECT id, name, email, balance, tier FROM users', [], (err, rows) => {
-                if (err) {
-                    return res.status(500).json({ success: false, message: 'Failed to fetch users.' });
-                }
-                res.json({ success: true, users: rows });
-            });
+            
+           try {
+     const stmt = db.prepare(
+        'SELECT id, name, email, balance, tier FROM users'
+    );
+
+    const rows = stmt.all(); // synchronous
+
+
+    return res.json({
+        success: true,
+        users: rows
+    });
+
+} catch (err) {
+    console.error('Database error:', err);
+    return res.status(500).json({
+        success: false,
+        message: 'Failed to fetch users.'
+    });
+}
+
         } catch (err) {
             return res.status(403).json({ success: false, message: 'Invalid or expired token.' });
         }
@@ -297,7 +315,7 @@ app.post('/api/v1/profile/update', (req, res) => {
 app.post('/api/v1/auth/login', async (req, res) => {
     const { email, password } = req.body;
     
-    console.log(`Login attempt for email: ${email}`);
+    
     const user = await findUser(db, email, password);
 
     if (user) {
@@ -541,7 +559,7 @@ try {
 
     server.listen(PORT, () => {
         console.log(`Chat server listening on port ${PORT}`);
-        console.log(`Deployment successful. Admin ID: ${adminUserId} | JWT Auth Routes Ready.`);
+       
     });
 
 } catch (err) {

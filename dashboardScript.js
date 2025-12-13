@@ -61,6 +61,13 @@ window.addEventListener('load', () => {
         // Socket connection variable
         let chatSocket = null;
 
+function formatCurrency(amount) {
+    // Ensure it's a number
+    const num = Number(amount) || 0;
+    // Convert to comma-separated string with 2 decimal places
+    return num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
 
         // --- Auth & Profile Functions ---
 
@@ -259,6 +266,32 @@ async function loadProfile() {
              // If connected, the socket handles history automatically.
         }
 
+        const confirmModal = document.getElementById('confirmModal');
+const confirmTitle = document.getElementById('confirmTitle');
+const confirmMessage = document.getElementById('confirmMessage');
+const confirmOk = document.getElementById('confirmOk');
+const confirmCancel = document.getElementById('confirmCancel');
+
+function showConfirm({ title, message, onConfirm }) {
+    confirmTitle.textContent = title || 'Confirm';
+    confirmMessage.textContent = message || 'Are you sure?';
+
+    confirmModal.classList.remove('hidden');
+
+    const cleanup = () => {
+        confirmModal.classList.add('hidden');
+        confirmOk.onclick = null;
+        confirmCancel.onclick = null;
+    };
+
+    confirmCancel.onclick = cleanup;
+
+    confirmOk.onclick = async () => {
+        await onConfirm();
+        cleanup();
+    };
+}
+
 
         // --- Event Listeners and Initialization ---
 
@@ -266,6 +299,7 @@ async function loadProfile() {
          
             const sidebar = document.getElementById('sidebar');
             const menuToggle = document.getElementById('menuToggle');
+        
             // 1. Initial Authentication Check and Profile Load
             checkAuth();
             loadProfile();
@@ -284,6 +318,7 @@ async function loadProfile() {
                 // document.getElementById('total-profit').textContent = `$${profit.toFixed(2)}`;
 
                 const tierMap = {
+                    0: { name: 'N/A', amount: 0 },
                     1: { name: 'Bronze Tier', amount: 2000 },
                     2: { name: 'Silver Tier', amount: 5000 },
                     3: { name: 'Gold Tier', amount: 10000 },
@@ -433,16 +468,30 @@ async function loadProfile() {
                     const response = await fetch('/api/v1/users', {
                         headers: getAuthHeaders(token)
                     });
+
+                     const loggedInUser = JSON.parse(localStorage.getItem('user')); // get current user
+    const loggedInUserId = loggedInUser ? loggedInUser.id : null;
                     const data = await response.json();
+                    
                     if (data.success) {
+                            const tierMap = {
+                            0: 'N/A',
+                            1: 'Bronze Tier',
+                            2: 'Silver Tier',
+                            3: 'Gold Tier',
+                            4: 'Platinum Tier',
+                            5: 'Diamond Tier',
+                            6: 'Centurion Tier'
+                            };
                         userTableBody.innerHTML = '';
-                        data.users.forEach(user => {
+                        data?.users?.filter(user => user?.id !== loggedInUserId).forEach(user => {
+                            const tierName = tierMap[user.tier] || 'N/A';
                             const row = document.createElement('tr');
                             row.innerHTML = `
                                 <td>${user.name}</td>
                                 <td>${user.email}</td>
-                                <td>${user.balance}</td>
-                                <td>${user.tier}</td>
+                                <td>${formatCurrency(user.balance)}</td>
+                                <td>${tierName}</td>
                                 <td>
                                     <button class="edit-btn" data-id="${user.id}">Edit</button>
                                     <button class="delete-btn" data-id="${user.id}">Delete</button>
@@ -477,23 +526,48 @@ async function loadProfile() {
                     });
                     const data = await response.json();
                     if (data.success) {
+                        
                         addUserModal.style.display = 'none';
+
+            // ✅ Clear all inputs
+            addUserForm.reset();
                         fetchUsers();
                     } else {
+                        
                         showMessageBox('Error', data.message || 'Failed to add user.', 'error');
                     }
                 });
 
                 userTableBody.addEventListener('click', async (e) => {
                     const token = getItemWithExpiry('userToken');
-                    if (e.target.classList.contains('delete-btn')) {
-                        const id = e.target.dataset.id;
-                        await fetch(`/api/v1/users/${id}`, {
-                            method: 'DELETE',
-                            headers: getAuthHeaders(token)
-                        });
-                        fetchUsers();
-                    } else if (e.target.classList.contains('edit-btn')) {
+                if (e.target.classList.contains('delete-btn')) {
+        const id = e.target.dataset.id;
+
+        // Show confirmation modal before deletion
+        showConfirm({
+            title: 'Delete User',
+            message: 'Are you sure you want to delete this user?',
+            onConfirm: async () => {
+                try {
+                    const response = await fetch(`/api/v1/users/${id}`, {
+                        method: 'DELETE',
+                        headers: getAuthHeaders(token)
+                    });
+                    const data = await response.json();
+
+                    if (data.success) {
+                        showMessageBox('Success', 'User deleted successfully.', 'success');
+                        fetchUsers(); // Refresh user table
+                    } else {
+                        showMessageBox('Error', data.message || 'Failed to delete user.', 'error');
+                    }
+                } catch (err) {
+                    console.error('Deletion error:', err);
+                    showMessageBox('Error', 'Network error: could not delete user.', 'error');
+                }
+            }
+        });
+    } else if (e.target.classList.contains('edit-btn')) {
                         const row = e.target.closest('tr');
                         const id = e.target.dataset.id;
                         const name = row.cells[0].textContent;
@@ -527,7 +601,7 @@ async function loadProfile() {
                     fetchUsers();
                 });
 
-                if (getItemWithExpiry('isAdmin') === true) {
+                if (getItemWithExpiry('isAdmin')) {
                     fetchUsers();
                 }
             }
