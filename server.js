@@ -206,7 +206,7 @@ function initializeRoutes(db) {
             if (!decoded.isAdmin) {
                 return res.status(403).json({ success: false, message: 'Forbidden.' });
             }
-            const { name, email, password } = req.body;
+            const { name, email, password, balance, totalProfit, activeInvestment, nextPayout } = req.body;
             const existingUser = db.prepare('SELECT 1 FROM users WHERE email = ?').get(email);
             if (existingUser) {
                 return res.status(400).json({ success: false, message: 'User already exists.' });
@@ -218,14 +218,17 @@ function initializeRoutes(db) {
                 email,
                 password: hash,
                 isAdmin: 0,
-                balance: 0,
+                balance: balance || 0,
+                totalProfit: totalProfit || 0,
+                activeInvestment: activeInvestment || 0,
+                nextPayout: nextPayout || null,
                 address: '',
                 subscribed: 0,
                 tier: 0
             };
             db.prepare(`
-                INSERT INTO users (id, name, email, password, isAdmin, balance, address, subscribed, tier)
-                VALUES (@id, @name, @email, @password, @isAdmin, @balance, @address, @subscribed, @tier)
+                INSERT INTO users (id, name, email, password, isAdmin, balance, totalProfit, activeInvestment, nextPayout, address, subscribed, tier)
+                VALUES (@id, @name, @email, @password, @isAdmin, @balance, @totalProfit, @activeInvestment, @nextPayout, @address, @subscribed, @tier)
             `).run(newUser);
             const { password: _, ...safeUserData } = newUser;
             res.status(201).json({ success: true, user: safeUserData });
@@ -386,6 +389,9 @@ app.post('/api/v1/auth/signup', async (req, res) => {
             password: hash,
             isAdmin: 0,      // 0 = false
             balance: 200,    // initial bonus
+            totalProfit: 0,
+            activeInvestment: 0,
+            nextPayout: null,
             address: '',
             subscribed: 0,   // 0 = false
             tier: 0
@@ -393,8 +399,8 @@ app.post('/api/v1/auth/signup', async (req, res) => {
 
         // Insert user into DB
         db.prepare(`
-            INSERT INTO users (id, name, email, password, isAdmin, balance, address, subscribed, tier)
-            VALUES (@id, @name, @email, @password, @isAdmin, @balance, @address, @subscribed, @tier)
+            INSERT INTO users (id, name, email, password, isAdmin, balance, totalProfit, activeInvestment, nextPayout, address, subscribed, tier)
+            VALUES (@id, @name, @email, @password, @isAdmin, @balance, @totalProfit, @activeInvestment, @nextPayout, @address, @subscribed, @tier)
         `).run(newUser);
 
         // Initialize chat history
