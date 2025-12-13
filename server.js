@@ -7,6 +7,8 @@ const bcrypt = require('bcrypt');
 const crypto = require('crypto');
 const initializeDatabase = require('./database');
 
+const { sendEmail } = require('./mailer');
+
 const saltRounds = 10;
 
 // --- Configuration ---
@@ -401,20 +403,58 @@ app.post('/api/v1/auth/signup', async (req, res) => {
 });
 
 app.post('/api/v1/auth/forgot-password', async (req, res) => {
-    const { email } = req.body;
-    const user = db.prepare('SELECT * FROM users WHERE email = ?').get(email);
-    if (!user) {
-        return res.status(404).json({ success: false, message: 'User not found.' });
+    try {
+        const { email } = req.body;
+
+        const user = db.prepare(
+            'SELECT * FROM users WHERE email = ?'
+        ).get(email);
+
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: 'User not found.'
+            });
+        }
+
+        const token = crypto.randomBytes(32).toString('hex');
+        const expires = Date.now() + 60 * 60 * 1000; // 1 hour
+
+        db.prepare(`
+            INSERT OR REPLACE INTO password_resets (email, token, expires)
+            VALUES (?, ?, ?)
+        `).run(email, token, expires);
+
+        const resetLink = `${process.env.APP_URL}/reset_password.html?token=${token}`;
+
+        await sendEmail({
+            to: email,
+            subject: 'Password Reset Request',
+            html: `
+                <p>Hello ${user.name},</p>
+                <p>You requested a password reset.</p>
+                <p>
+                    <a href="${resetLink}" style="padding:10px 15px;background:#2563eb;color:#fff;text-decoration:none;border-radius:4px">
+                        Reset Password
+                    </a>
+                </p>
+                <p>This link expires in 1 hour.</p>
+                <p>If you did not request this, ignore this email.</p>
+            `
+        });
+
+        res.json({
+            success: true,
+            message: 'Password reset link sent to your email.'
+        });
+
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to send reset email.'
+        });
     }
-    const token = crypto.randomBytes(32).toString('hex');
-    const expires = Date.now() + 3600000; // 1 hour
-    db.prepare('INSERT OR REPLACE INTO password_resets (email, token, expires) VALUES (?, ?, ?)').run(email, token, expires);
-
-    // In a real app, you would send an email with the reset link.
-    // For this example, we'll just log it to the console.
-    console.log(`Password reset link for ${email}: ${req.protocol}://${req.get('host')}/reset_password.html?token=${token}`);
-
-    res.json({ success: true, message: 'Password reset link sent to your email.' });
 });
 
 app.post('/api/v1/auth/reset-password', async (req, res) => {
