@@ -502,7 +502,7 @@ app.post('/api/v1/admin/confirm-payment', adminRequired, async (req, res) => {
     res.json({ success: true, newBalance });
 });
 
-app.get('/api/v1/subscriptions', async (req, res) => {
+app.post('/api/v1/deposits', (req, res) => {
     const authHeader = req.headers.authorization;
     if (!authHeader) {
         return res.status(401).json({ success: false, message: 'Authorization header required.' });
@@ -510,8 +510,60 @@ app.get('/api/v1/subscriptions', async (req, res) => {
     const token = authHeader.split(' ')[1];
     try {
         const decoded = jwt.verify(token, SECRET_KEY);
+        const { amount, method } = req.body;
+        const deposit = {
+            userId: decoded.id,
+            date: new Date().toISOString().split('T')[0],
+            amount,
+            method
+        };
+        db.prepare('INSERT INTO deposits (userId, date, amount, method) VALUES (?, ?, ?, ?)').run(deposit.userId, deposit.date, deposit.amount, deposit.method);
+        res.status(201).json({ success: true, deposit });
+    } catch (err) {
+        return res.status(403).json({ success: false, message: 'Invalid or expired token.' });
+    }
+});
+
+app.post('/api/v1/withdrawals', (req, res) => {
+    const authHeader = req.headers.authorization;
+    if (!authHeader) {
+        return res.status(401).json({ success: false, message: 'Authorization header required.' });
+    }
+    const token = authHeader.split(' ')[1];
+    try {
+        const decoded = jwt.verify(token, SECRET_KEY);
+        const { amount, method, address } = req.body;
+        const withdrawal = {
+            userId: decoded.id,
+            date: new Date().toISOString().split('T')[0],
+            amount,
+            method,
+            address
+        };
+        db.prepare('INSERT INTO withdrawals (userId, date, amount, method, address) VALUES (?, ?, ?, ?, ?)').run(withdrawal.userId, withdrawal.date, withdrawal.amount, withdrawal.method, withdrawal.address);
+        res.status(201).json({ success: true, withdrawal });
+    } catch (err)
+        {
+        return res.status(403).json({ success: false, message: 'Invalid or expired token.' });
+    }
+});
+
+
+app.get('/api/v1/transactions', async (req, res) => {
+    const authHeader = req.headers.authorization;
+    if (!authHeader) {
+        return res.status(401).json({ success: false, message: 'Authorization header required.' });
+    }
+    const token = authHeader.split(' ')[1];
+    try {
+        const decoded = jwt.verify(token, SECRET_KEY);
+        const deposits = db.prepare('SELECT *, "Deposit" as type FROM deposits WHERE userId = ?').all(decoded.id);
+        const withdrawals = db.prepare('SELECT *, "Withdrawal" as type FROM withdrawals WHERE userId = ?').all(decoded.id);
         const subscriptions = db.prepare('SELECT * FROM subscriptions WHERE userId = ?').all(decoded.id);
-        res.json({ success: true, subscriptions });
+
+        const transactions = [...deposits, ...withdrawals, ...subscriptions].sort((a, b) => new Date(b.date) - new Date(a.date));
+
+        res.json({ success: true, transactions });
     } catch (err) {
         return res.status(403).json({ success: false, message: 'Invalid or expired token.' });
     }

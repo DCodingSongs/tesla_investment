@@ -749,26 +749,49 @@ function showConfirm({ title, message, onConfirm }) {
 
             async function fetchHistory() {
                 const token = getItemWithExpiry('userToken');
-                const response = await fetch('/api/v1/subscriptions', {
+                const response = await fetch('/api/v1/transactions', {
                     headers: getAuthHeaders(token)
                 });
                 const data = await response.json();
                 if (data.success) {
                     const historyTableBody = document.getElementById('history-table-body');
+                    const depositHistoryTableBody = document.getElementById('deposit-history-table-body');
+                    const withdrawalHistoryTableBody = document.getElementById('withdrawal-history-table-body');
                     const dashboardHistoryTableBody = document.getElementById('dashboard-history-table-body');
 
                     if(historyTableBody) historyTableBody.innerHTML = '';
+                    if(depositHistoryTableBody) depositHistoryTableBody.innerHTML = '';
+                    if(withdrawalHistoryTableBody) withdrawalHistoryTableBody.innerHTML = '';
                     if(dashboardHistoryTableBody) dashboardHistoryTableBody.innerHTML = '';
 
-                    data.subscriptions.forEach(sub => {
-                        const row = document.createElement('tr');
-                        row.innerHTML = `
-                            <td style="border: 1px solid var(--color-border); padding: 12px;">${sub.date}</td>
-                            <td style="border: 1px solid var(--color-border); padding: 12px;">${sub.type}</td>
-                            <td style="border: 1px solid var(--color-border); padding: 12px;">${formatCurrency(sub.amount)}</td>
-                        `;
-                        if(historyTableBody) historyTableBody.appendChild(row.cloneNode(true));
-                        if(dashboardHistoryTableBody) dashboardHistoryTableBody.appendChild(row);
+                    data.transactions.forEach(tx => {
+                        if (tx.type === 'Deposit') {
+                            const row = document.createElement('tr');
+                            row.innerHTML = `
+                                <td style="border: 1px solid var(--color-border); padding: 12px;">${tx.date}</td>
+                                <td style="border: 1px solid var(--color-border); padding: 12px;">${formatCurrency(tx.amount)}</td>
+                                <td style="border: 1px solid var(--color-border); padding: 12px;">${tx.method}</td>
+                            `;
+                            if(depositHistoryTableBody) depositHistoryTableBody.appendChild(row);
+                        } else if (tx.type === 'Withdrawal') {
+                            const row = document.createElement('tr');
+                            row.innerHTML = `
+                                <td style="border: 1px solid var(--color-border); padding: 12px;">${tx.date}</td>
+                                <td style="border: 1px solid var(--color-border); padding: 12px;">${formatCurrency(tx.amount)}</td>
+                                <td style="border: 1px solid var(--color-border); padding: 12px;">${tx.method}</td>
+                                <td style="border: 1px solid var(--color-border); padding: 12px;">${tx.address}</td>
+                            `;
+                            if(withdrawalHistoryTableBody) withdrawalHistoryTableBody.appendChild(row);
+                        } else {
+                             const row = document.createElement('tr');
+                            row.innerHTML = `
+                                <td style="border: 1px solid var(--color-border); padding: 12px;">${tx.date}</td>
+                                <td style="border: 1px solid var(--color-border); padding: 12px;">${tx.type}</td>
+                                <td style="border: 1px solid var(--color-border); padding: 12px;">${formatCurrency(tx.amount)}</td>
+                            `;
+                            if(historyTableBody) historyTableBody.appendChild(row.cloneNode(true));
+                            if(dashboardHistoryTableBody) dashboardHistoryTableBody.appendChild(row);
+                        }
                     });
                 }
             }

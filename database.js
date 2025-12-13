@@ -43,6 +43,29 @@ function initializeDatabase() {
         )
     `).run();
 
+    db.prepare(`
+        CREATE TABLE IF NOT EXISTS deposits (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            userId TEXT NOT NULL,
+            date TEXT NOT NULL,
+            amount REAL NOT NULL,
+            method TEXT NOT NULL,
+            FOREIGN KEY (userId) REFERENCES users(id)
+        )
+    `).run();
+
+    db.prepare(`
+        CREATE TABLE IF NOT EXISTS withdrawals (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            userId TEXT NOT NULL,
+            date TEXT NOT NULL,
+            amount REAL NOT NULL,
+            method TEXT NOT NULL,
+            address TEXT NOT NULL,
+            FOREIGN KEY (userId) REFERENCES users(id)
+        )
+    `).run();
+
     // Default admin values
     const defaultAdmin = {
       id: 'tesla_aiw',
