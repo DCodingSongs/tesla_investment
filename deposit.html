@@ -115,6 +115,7 @@
             <div class="top-bar">
                 <h1>Deposit Funds</h1>
             </div>
+    <script src="https://cdn.jsdelivr.net/npm/davidshimjs/qrcodejs/qrcode.min.js"></script>
 
             <div class="step-indicator">
                 <div id="step-1" class="active-step">1. Select Details</div>
@@ -157,9 +158,7 @@
                     <div class="checkout-details">
                         <h3>Amount to Send: <span id="checkout-amount-crypto" style="color: var(--color-primary); font-size: 1.5rem;"></span></h3>
                         <p style="color: var(--color-text-light);">Network: <span id="checkout-network"></span></p>
-                        <div class="qr-code-placeholder">
-                            <span id="qr-code-text">QR Code Placeholder</span>
-                        </div>
+                        <div id="qrcode" class="qr-code-placeholder"></div>
 
                         <p style="text-align: left; margin-top: 20px; color: var(--color-text-light);">Recipient Wallet Address:</p>
                         <div class="address-box">
@@ -284,14 +283,17 @@
                 document.getElementById('checkout-network').innerText = network;
                 document.getElementById('checkout-address').innerText = address;
                 
-                // FIX: Update the placeholder text inside the QR box (which was missing)
-                const qrTextElement = document.getElementById('qr-code-text');
-                if (qrTextElement) {
-                    qrTextElement.innerText = 'Scan ' + currency + ' QR Code'; 
-                }
-
                 // Move to Step 2
                 updateSteps(2);
+
+                // Generate QR Code *after* the container is visible
+                const qrcodeContainer = document.getElementById('qrcode');
+                qrcodeContainer.innerHTML = '';
+                new QRCode(qrcodeContainer, {
+                    text: address,
+                    width: 128,
+                    height: 128,
+                });
             });
             
         });

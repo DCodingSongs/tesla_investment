@@ -510,8 +510,20 @@ app.get('/api/v1/subscriptions', async (req, res) => {
     const token = authHeader.split(' ')[1];
     try {
         const decoded = jwt.verify(token, SECRET_KEY);
-        const subscriptions = db.prepare('SELECT * FROM subscriptions WHERE userId = ?').all(decoded.id);
-        res.json({ success: true, subscriptions });
+        const page = parseInt(req.query.page, 10) || 1;
+        const limit = parseInt(req.query.limit, 10) || 10;
+        const offset = (page - 1) * limit;
+
+        const subscriptions = db.prepare('SELECT * FROM subscriptions WHERE userId = ? LIMIT ? OFFSET ?').all(decoded.id, limit, offset);
+        const total = db.prepare('SELECT COUNT(*) as count FROM subscriptions WHERE userId = ?').get(decoded.id).count;
+
+        res.json({
+            success: true,
+            subscriptions,
+            total,
+            page,
+            limit
+        });
     } catch (err) {
         return res.status(403).json({ success: false, message: 'Invalid or expired token.' });
     }

@@ -745,9 +745,12 @@ debugger
                 }
             }
 
-            async function fetchHistory() {
+            let currentPage = 1;
+            const limit = 10;
+
+            async function fetchHistory(page = 1) {
                 const token = getItemWithExpiry('userToken');
-                const response = await fetch('/api/v1/subscriptions', {
+                const response = await fetch(`/api/v1/subscriptions?page=${page}&limit=${limit}`, {
                     headers: getAuthHeaders(token)
                 });
                 const data = await response.json();
@@ -768,8 +771,30 @@ debugger
                         if(historyTableBody) historyTableBody.appendChild(row.cloneNode(true));
                         if(dashboardHistoryTableBody) dashboardHistoryTableBody.appendChild(row);
                     });
+
+                    const pageInfo = document.getElementById('page-info');
+                    const prevPage = document.getElementById('prev-page');
+                    const nextPage = document.getElementById('next-page');
+
+                    const totalPages = Math.ceil(data.total / limit);
+                    pageInfo.textContent = `Page ${page} of ${totalPages}`;
+
+                    prevPage.disabled = page <= 1;
+                    nextPage.disabled = page >= totalPages;
+
+                    currentPage = page;
                 }
             }
+
+            document.getElementById('prev-page').addEventListener('click', () => {
+                if (currentPage > 1) {
+                    fetchHistory(currentPage - 1);
+                }
+            });
+
+            document.getElementById('next-page').addEventListener('click', () => {
+                fetchHistory(currentPage + 1);
+            });
 
             fetchHistory();
             
