@@ -404,6 +404,8 @@ function showConfirm({ title, message, onConfirm }) {
                 document.getElementById('total-balance').textContent = `$${balance.toFixed(2)}`;
                 // document.getElementById('total-profit').textContent = `$${profit.toFixed(2)}`;
 
+            document.getElementById('wallet-balance').textContent = `$${balance.toFixed(2)}`;
+
                 const tierMap = {
                     0: { name: 'N/A', amount: 0 },
                     1: { name: 'Bronze Tier', amount: 2000 },
@@ -557,13 +559,13 @@ function showConfirm({ title, message, onConfirm }) {
                 const editUserForm = document.getElementById('edit-user-form');
                 const userTableBody = document.getElementById('user-table-body');
                 const closeButtons = document.querySelectorAll('.close-button');
-debugger
+
                 async function fetchUsers() {
                     const token = getItemWithExpiry('userToken');
                     const response = await fetch('/api/v1/users', {
                         headers: getAuthHeaders(token)
                     });
-debugger
+
                      const loggedInUser = JSON.parse(localStorage.getItem('user')); // get current user
                     const loggedInUserId = loggedInUser ? loggedInUser.id : null;
                     const data = await response.json();
