@@ -425,10 +425,10 @@ function showConfirm({ title, message, onConfirm }) {
 
             // 2. Mobile Menu Toggle
             if (menuToggle && sidebar) {
-        menuToggle.addEventListener('click', () => {
-            sidebar.classList.toggle('active');
-        });
-    }
+                menuToggle.addEventListener('click', () => {
+                    sidebar.classList.toggle('open');
+                });
+            }
 
             // 3. Navigation/Page Switching Logic
             navLinks.forEach(link => {
@@ -753,7 +753,7 @@ function showConfirm({ title, message, onConfirm }) {
 
             async function fetchHistory(page = 1) {
                 const token = getItemWithExpiry('userToken');
-                const response = await fetch(`/api/v1/subscriptions?page=${page}&limit=${limit}`, {
+                const response = await fetch(`/api/v1/transactions?page=${page}&limit=${limit}`, {
                     headers: getAuthHeaders(token)
                 });
                 const data = await response.json();
@@ -764,7 +764,7 @@ function showConfirm({ title, message, onConfirm }) {
                     if(historyTableBody) historyTableBody.innerHTML = '';
                     if(dashboardHistoryTableBody) dashboardHistoryTableBody.innerHTML = '';
 
-                    data.subscriptions.forEach(sub => {
+                    data.transactions.forEach(sub => {
                         const row = document.createElement('tr');
                         row.innerHTML = `
                             <td style="border: 1px solid var(--color-border); padding: 12px;">${sub.date}</td>
@@ -779,7 +779,7 @@ function showConfirm({ title, message, onConfirm }) {
                     const prevPage = document.getElementById('prev-page');
                     const nextPage = document.getElementById('next-page');
 
-                    const totalPages = Math.ceil(data.total / limit);
+                    const totalPages = Math.ceil(data.transactions.length / limit);
                     pageInfo.textContent = `Page ${page} of ${totalPages}`;
 
                     prevPage.disabled = page <= 1;

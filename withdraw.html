@@ -112,15 +112,43 @@
             const amount = document.getElementById('w-amount').value;
             const networkSelect = document.getElementById('w-network');
             const network = networkSelect.options[networkSelect.selectedIndex].value;
-            // In a real application, you would send this data to your backend server
-
-            // Update confirmation details
-            document.getElementById('conf-amount').innerText = parseFloat(amount).toFixed(2);
-            document.getElementById('conf-network').innerText = network;
             
-            // Switch interface
-            document.getElementById('withdraw-form-interface').classList.add('hidden');
-            document.getElementById('withdrawal-confirmation').classList.remove('hidden');
+            const token = localStorage.getItem('userToken');
+
+            if (token) {
+                fetch('/api/v1/transactions/withdraw', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${JSON.parse(token).value}`
+                    },
+                    body: JSON.stringify({
+                        amount: amount,
+                        type: network,
+                        status: 'Pending'
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Update confirmation details
+                        document.getElementById('conf-amount').innerText = parseFloat(amount).toFixed(2);
+                        document.getElementById('conf-network').innerText = network;
+
+                        // Switch interface
+                        document.getElementById('withdraw-form-interface').classList.add('hidden');
+                        document.getElementById('withdrawal-confirmation').classList.remove('hidden');
+                    } else {
+                        alert('Failed to record withdrawal: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('An error occurred while recording the withdrawal.');
+                });
+            } else {
+                alert('Authentication error. Please log in again.');
+            }
         });
     </script>
 </body>
