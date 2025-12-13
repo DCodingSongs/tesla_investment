@@ -66,8 +66,8 @@ function initializeDatabase() {
       const hashedPassword = bcrypt.hashSync(defaultAdmin.password, saltRounds);
 
       db.prepare(`
-        INSERT INTO users (id, name, email, password, isAdmin, balance, subscribed, tier, address)
-        VALUES (@id, @name, @email, @password, @isAdmin, @balance, @subscribed, @tier, @address)
+        INSERT INTO users (id, name, email, password, isAdmin, balance, subscribed, tier, address, totalProfit, activeInvestment, nextPayout)
+        VALUES (@id, @name, @email, @password, @isAdmin, @balance, @subscribed, @tier, @address, @totalProfit, 0, NULL)
       `).run({
         ...defaultAdmin,
         password: hashedPassword

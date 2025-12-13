@@ -35,13 +35,13 @@
 
 
 function showPage(page) {
-    pages.forEach(p => {
-        if (p.id === page) {
-            p.style.display = 'block';
-        } else {
-            p.style.display = 'none';
-        }
-    });
+    // pages.forEach(p => {
+    //     if (p.id === page) {
+    //         p.style.display = 'block';
+    //     } else {
+    //         p.style.display = 'none';
+    //     }
+    // });
 }
 
 // Load the correct page on refresh
@@ -320,7 +320,8 @@ if(updateUserForm){
                 });
                 const data = await response.json();
                 if (response.ok && data.success) {
-                    userSearchInput.value = '';
+                    debugger
+                    userSearchInput1.value = '';
                     userInfoDiv.classList.add('hidden');
                     currentUser = null;
                     showMessage('Payment confirmed and user updated successfully.', 'success');
@@ -474,7 +475,6 @@ function showConfirm({ title, message, onConfirm }) {
         });
     });
 
-            
 
             const user = JSON.parse(localStorage.getItem('user'));
             if (user) {
@@ -482,11 +482,11 @@ function showConfirm({ title, message, onConfirm }) {
                 const tier = user.tier || 0;
                 const profit = user.totalProfit;
 
-                document.getElementById('total-balance').textContent = `$${balance.toFixed(2)}`;
+                document.getElementById('total-balance').textContent = `$${formatCurrency(balance.toFixed(2))}`;
                 // document.getElementById('total-profit').textContent = `$${profit.toFixed(2)}`;
 
-            document.getElementById('wallet-balance').textContent = `$${balance.toFixed(2)}`;
-            document.getElementById('wallet-balance').textContent = `$${balance.toFixed(2)}`;
+            document.getElementById('wallet-balance').textContent = `$${formatCurrency(balance.toFixed(2))}`;
+            document.getElementById('wallet-balance').textContent = `$${formatCurrency(balance.toFixed(2))}`;
 
                 const tierMap = {
                     0: { name: 'N/A', amount: 0 },
@@ -633,7 +633,7 @@ function showConfirm({ title, message, onConfirm }) {
             const userManagementPage = document.getElementById('user-management');
             if (userManagementPage) {
                 let allUsers = [];
-                const userSearchInput2 = document.getElementById('user-search-input');
+                const userSearchInput = document.getElementById('user-search-input');
                 const addUserBtn = document.getElementById('add-user-btn');
                 const addUserModal = document.getElementById('add-user-modal');
                 const editUserModal = document.getElementById('edit-user-modal');
@@ -711,7 +711,7 @@ function showConfirm({ title, message, onConfirm }) {
                         userTableBody.appendChild(row);
                     });
                 }
-
+if(userSearchInput){
    userSearchInput.addEventListener('input', () => {
                     const searchTerm = userSearchInput.value.toLowerCase();
                     const filteredUsers = allUsers.filter(user =>
@@ -721,8 +721,8 @@ function showConfirm({ title, message, onConfirm }) {
                     renderUsers(filteredUsers);
                 });
 
-                
-
+            } 
+if(addUserBtn){
                 addUserBtn.addEventListener('click', () => {
                   
                     console.log('Add User button clicked');
@@ -730,7 +730,7 @@ function showConfirm({ title, message, onConfirm }) {
                  
 
                 });
-
+            }
                 closeButtons.forEach(btn => {
                     btn.addEventListener('click', () => {
                     
