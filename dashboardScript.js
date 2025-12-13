@@ -433,9 +433,9 @@ function showConfirm({ title, message, onConfirm }) {
     }
 
          
-                if(isAdmin){
-                  window.location.href = '/admin.html';
-                }
+                // if(isAdmin){
+                //   window.location.href = '/admin.html';
+                // }
                 
 
     if (!isAdmin || isAdmin == false) {

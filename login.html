@@ -138,10 +138,24 @@ localStorage.clear();
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ email, password }),
                 });
-                
-                const data = await response.json();
 
-                if (response.ok && data.success) {
+                let data = {};
+                try {
+                    data = await response.json();
+                } catch (jsonError) {
+                 
+                    if (!response.ok) {
+                
+                        throw new Error(`Server returned status ${response.status} but no valid error message.`);
+                    }
+                    throw new Error('Server success response (200) was not valid JSON.');
+                }
+                
+                // const data = await response.json();
+
+            if (response.ok) {
+            // SUCCESS (Status 200-299)
+            if (data.success && data.token) {
                     const ttl = 30 * 24 * 60 * 60 * 1000; // 30 days
 
                     setItemWithExpiry('userToken', data.token, ttl);
@@ -161,6 +175,12 @@ localStorage.clear();
                 } else {
                     showMessage(data.message || 'Login failed. Please check your credentials.');
                 }
+        } else {
+            
+            showMessageBox('Login Error', data.message || response.statusText, 'error');
+        }
+
+              
             } catch (error) {
                 console.error('Network or Server Error:', error);
                 showMessage('Connection error. Please try again later.');
