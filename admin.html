@@ -1596,4 +1596,17 @@
     </script>
     
 </body>
+<script>
+          document.addEventListener('DOMContentLoaded', () => {
+      
+        
+            const user = JSON.parse(localStorage.getItem('user'));
+            if (user) {
+                if(!user.isAdmin){
+                  window.location.href = 'login.html';
+                }
+                
+}
+        })
+    </script>
 </html>
