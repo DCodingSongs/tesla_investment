@@ -543,7 +543,7 @@ function showConfirm({ title, message, onConfirm }) {
                     }
 
                     // Mobile Closing Logic
-                  if (window.innerWidth <= 900 && sidebar.classList.contains('active')) {
+                  if (window.innerWidth <= 600 && sidebar.classList.contains('active')) {
     sidebar.classList.remove('active');
 }
                 });
