@@ -211,6 +211,7 @@ function initializeRoutes(db) {
                 return res.status(403).json({ success: false, message: 'Forbidden.' });
             }
             const { name, email, balance, tier } = req.body;
+            // console.log('Updating user:', req.params.id, name, email, balance, tier);
             db.prepare('UPDATE users SET name = ?, email = ?, balance = ?, tier = ? WHERE id = ?').run(name, email, balance, tier, req.params.id);
             res.json({ success: true });
         } catch (err) {
@@ -268,44 +269,29 @@ app.post('/api/v1/profile/update', (req, res) => {
     }
     const token = authHeader.split(' ')[1];
     
-    try {
+  try {
         const decoded = jwt.verify(token, SECRET_KEY);
         const { name, address, newPassword } = req.body;
 
-        db.get('SELECT * FROM users WHERE id = ?', [decoded.id], (err, user) => {
-            if (err || !user) {
-                return res.status(404).json({ success: false, message: 'User not found.' });
-            }
+        const user = db.prepare('SELECT * FROM users WHERE id = ?').get(decoded.id);
+        if (!user) return res.status(404).json({ success: false, message: 'User not found.' });
 
-            const newName = name || user.name;
-            const newAddress = address || user.address;
+        const newName = name || user.name;
+        const newAddress = address || user.address;
 
-            const updateUser = (hashedPassword) => {
-                const finalPassword = hashedPassword || user.password;
-                db.run('UPDATE users SET name = ?, address = ?, password = ? WHERE id = ?', [newName, newAddress, finalPassword, decoded.id], function(err) {
-                    if (err) {
-                        return res.status(500).json({ success: false, message: 'Failed to update profile.' });
-                    }
-                    const { password, ...safeUserData } = { ...user, name: newName, address: newAddress };
-                    return res.json({ success: true, message: 'Profile updated.', ...safeUserData });
-                });
-            };
+        let finalPassword = user.password;
 
-            if (newPassword) {
-                if (newPassword.length < 8) {
-                    return res.status(400).json({ success: false, message: 'Password must be at least 8 characters.' });
-                }
-                bcrypt.hash(newPassword, saltRounds, (err, hash) => {
-                    if (err) {
-                        return res.status(500).json({ success: false, message: 'Failed to hash new password.' });
-                    }
-                    updateUser(hash);
-                });
-            } else {
-                updateUser(null);
-            }
-        });
-        
+        if (newPassword) {
+            if (newPassword.length < 8) return res.status(400).json({ success: false, message: 'Password must be at least 8 characters.' });
+            finalPassword = bcrypt.hashSync(newPassword, saltRounds);
+        }
+
+        db.prepare('UPDATE users SET name = ?, address = ?, password = ? WHERE id = ?')
+          .run(newName, newAddress, finalPassword, decoded.id);
+
+        const { password, ...safeUserData } = { ...user, name: newName, address: newAddress };
+        return res.json({ success: true, message: 'Profile updated.', ...safeUserData });
+
     } catch (err) {
         return res.status(403).json({ success: false, message: 'Invalid or expired token.' });
     }
