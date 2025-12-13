@@ -199,6 +199,7 @@ const confirmCancel = document.getElementById('confirmCancel');
         const userEmailSpan = document.getElementById('user-email');
         const userBalanceSpan = document.getElementById('user-balance');
         const confirmPaymentBtn = document.getElementById('confirm-payment-btn');
+         const updateUserForm = document.getElementById('update-user-form');
         const messageBox1 = document.getElementById('message-box');
         let currentUser = null;
 
@@ -218,80 +219,160 @@ const confirmCancel = document.getElementById('confirmCancel');
     }, 3000);
         }
 
-      if (userSearchInput1) {
-    userSearchInput1.addEventListener('input', async () => {
-        const email = userSearchInput1.value.trim();
+//       if (userSearchInput1) {
+//     userSearchInput1.addEventListener('input', async () => {
+//         const email = userSearchInput1.value.trim();
 
-        if (email.length < 3) {
-            userInfoDiv?.classList.add('hidden');
-            return;
-        }
+//         if (email.length < 3) {
+//             userInfoDiv?.classList.add('hidden');
+//             return;
+//         }
 
-        try {
-            const userToken = JSON.parse(localStorage.getItem('userToken'));
-            const token = userToken?.value;
+//         try {
+//             const userToken = JSON.parse(localStorage.getItem('userToken'));
+//             const token = userToken?.value;
 
-            const response = await fetch(
-                `/api/v1/admin/search-user?email=${encodeURIComponent(email)}`,
-                {
-                    headers: { Authorization: `Bearer ${token}` }
+//             const response = await fetch(
+//                 `/api/v1/admin/search-user?email=${encodeURIComponent(email)}`,
+//                 {
+//                     headers: { Authorization: `Bearer ${token}` }
+//                 }
+//             );
+
+//             const data = await response.json();
+
+//             if (response.ok && data.success) {
+//                 currentUser = data.user;
+//                 userNameSpan.textContent = currentUser.name;
+//                 userEmailSpan.textContent = currentUser.email;
+//                 userBalanceSpan.textContent = currentUser.balance;
+//                 userInfoDiv.classList.remove('hidden');
+//             } else {
+//                 userInfoDiv.classList.add('hidden');
+//             }
+//         } catch (err) {
+//             console.error(err);
+//             userInfoDiv?.classList.add('hidden');
+//         }
+//     });
+// }
+
+if(userSearchInput1){
+userSearchInput1.addEventListener('input', async () => {
+            const email = userSearchInput1?.value.trim();
+            if (email.length < 3) {
+                userInfoDiv.classList.add('hidden');
+                return;
+            }
+
+            try {
+                const userToken = JSON.parse(localStorage.getItem('userToken'));
+                const token = userToken ? userToken.value : null;
+                const response = await fetch(`/api/v1/admin/search-user?email=${email}`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await response.json();
+                if (response.ok && data.success) {
+                    currentUser = data.user;
+                    userNameSpan.textContent = currentUser.name;
+                    userEmailSpan.textContent = currentUser.email;
+                    userBalanceSpan.textContent = currentUser.balance;
+                    // Pre-fill form fields with existing data if available
+                    document.getElementById('total-balance').value = currentUser.balance || '';
+                    document.getElementById('total-profit').value = currentUser.totalProfit || '';
+                    document.getElementById('active-investment').value = currentUser.activeInvestment || '';
+                    document.getElementById('next-payout').value = currentUser.nextPayout || '';
+                    userInfoDiv.classList.remove('hidden');
+                } else {
+                    userInfoDiv.classList.add('hidden');
                 }
-            );
-
-            const data = await response.json();
-
-            if (response.ok && data.success) {
-                currentUser = data.user;
-                userNameSpan.textContent = currentUser.name;
-                userEmailSpan.textContent = currentUser.email;
-                userBalanceSpan.textContent = currentUser.balance;
-                userInfoDiv.classList.remove('hidden');
-            } else {
+            } catch (error) {
+                console.error('Error searching for user:', error);
                 userInfoDiv.classList.add('hidden');
             }
-        } catch (err) {
-            console.error(err);
-            userInfoDiv?.classList.add('hidden');
-        }
-    });
+        });
+    }
+if(updateUserForm){
+
+
+        updateUserForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            if (!currentUser) return;
+
+            const updatedData = {
+                userId: currentUser.id,
+                balance: document.getElementById('total-balance').value,
+                totalProfit: document.getElementById('total-profit').value,
+                activeInvestment: document.getElementById('active-investment').value,
+                nextPayout: document.getElementById('next-payout').value
+            };
+
+            try {
+                const userToken = JSON.parse(localStorage.getItem('userToken'));
+                const token = userToken ? userToken.value : null;
+                const response = await fetch('/api/v1/admin/confirm-payment', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify(updatedData)
+                });
+                const data = await response.json();
+                if (response.ok && data.success) {
+                    userSearchInput.value = '';
+                    userInfoDiv.classList.add('hidden');
+                    currentUser = null;
+                    showMessage('Payment confirmed and user updated successfully.', 'success');
+                } else {
+                    showMessage(data.message || 'Failed to update user.', 'error');
+                }
+            } catch (error) {
+                console.error('Error updating user:', error);
+                showMessage('An error occurred while updating the user.', 'error');
+            }
+        });
 }
 
-if (confirmPaymentBtn) {
+
+
+
+// if (confirmPaymentBtn) {
     
-    confirmPaymentBtn.addEventListener('click', async () => {
+//     confirmPaymentBtn.addEventListener('click', async () => {
         
-        if (!currentUser) return;
+//         if (!currentUser) return;
 
-        try {
-            const userToken = JSON.parse(localStorage.getItem('userToken'));
-            const token = userToken?.value;
+//         try {
+//             const userToken = JSON.parse(localStorage.getItem('userToken'));
+//             const token = userToken?.value;
 
-            const response = await fetch('/api/v1/admin/confirm-payment', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    Authorization: `Bearer ${token}`
-                },
-                body: JSON.stringify({ userId: currentUser.id })
-            });
+//             const response = await fetch('/api/v1/admin/confirm-payment', {
+//                 method: 'POST',
+//                 headers: {
+//                     'Content-Type': 'application/json',
+//                     Authorization: `Bearer ${token}`
+//                 },
+//                 body: JSON.stringify({ userId: currentUser.id })
+//             });
 
-            const data = await response.json();
+//             const data = await response.json();
 
-            if (response.ok && data.success) {
-                showMessage('Payment confirmed successfully.', 'success');
-                userSearchInput1.value = '';
-                userInfoDiv.classList.add('hidden');
+//             if (response.ok && data.success) {
+//                 showMessage('Payment confirmed successfully.', 'success');
+//                 userSearchInput1.value = '';
+//                 userInfoDiv.classList.add('hidden');
                 
-                userBalanceSpan.textContent = data.newBalance;
-            } else {
-                showMessage(data.message || 'Failed to confirm payment', 'error');
-            }
-        } catch (err) {
-            console.error(err);
-            showMessage('Network error', 'error');
-        }
-    });
-}
+//                 userBalanceSpan.textContent = data.newBalance;
+//             } else {
+//                 showMessage(data.message || 'Failed to confirm payment', 'error');
+//             }
+//         } catch (err) {
+//             console.error(err);
+//             showMessage('Network error', 'error');
+//         }
+//     });
+// }
 
 
       
@@ -552,7 +633,7 @@ function showConfirm({ title, message, onConfirm }) {
             const userManagementPage = document.getElementById('user-management');
             if (userManagementPage) {
                 let allUsers = [];
-                const userSearchInput = document.getElementById('user-search-input');
+                const userSearchInput2 = document.getElementById('user-search-input');
                 const addUserBtn = document.getElementById('add-user-btn');
                 const addUserModal = document.getElementById('add-user-modal');
                 const editUserModal = document.getElementById('edit-user-modal');
@@ -631,7 +712,7 @@ function showConfirm({ title, message, onConfirm }) {
                     });
                 }
 
-                userSearchInput.addEventListener('input', () => {
+   userSearchInput.addEventListener('input', () => {
                     const searchTerm = userSearchInput.value.toLowerCase();
                     const filteredUsers = allUsers.filter(user =>
                         user.name.toLowerCase().includes(searchTerm) ||
@@ -639,6 +720,8 @@ function showConfirm({ title, message, onConfirm }) {
                     );
                     renderUsers(filteredUsers);
                 });
+
+                
 
                 addUserBtn.addEventListener('click', () => {
                   

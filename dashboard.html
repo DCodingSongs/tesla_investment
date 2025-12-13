@@ -1318,7 +1318,27 @@ position: relative;
             <p class="text-gray-300"><strong>Name:</strong> <span id="user-name"></span></p>
             <p class="text-gray-300"><strong>Email:</strong> <span id="user-email"></span></p>
             <p class="text-gray-300"><strong>Balance:</strong> $<span id="user-balance"></span></p>
-            <button id="confirm-payment-btn" class="mt-4 w-full py-3 bg-primary text-white font-semibold rounded-lg transition duration-200">Confirm Payment</button>
+            <form id="update-user-form" class="mt-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label for="total-balance" class="block text-sm font-medium text-gray-300 mb-1">Total Balance</label>
+                        <input type="number" step="0.01" id="total-balance" name="total-balance" required class="w-full px-3 py-2 bg-gray-600 border border-gray-500 rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-primary">
+                    </div>
+                    <div>
+                        <label for="total-profit" class="block text-sm font-medium text-gray-300 mb-1">Total Profit</label>
+                        <input type="number" step="0.01" id="total-profit" name="total-profit" required class="w-full px-3 py-2 bg-gray-600 border border-gray-500 rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-primary">
+                    </div>
+                    <div>
+                        <label for="active-investment" class="block text-sm font-medium text-gray-300 mb-1">Active Investment</label>
+                        <input type="number" step="0.01" id="active-investment" name="active-investment" required class="w-full px-3 py-2 bg-gray-600 border border-gray-500 rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-primary">
+                    </div>
+                    <div>
+                        <label for="next-payout" class="block text-sm font-medium text-gray-300 mb-1">Next Payout Date</label>
+                        <input type="date" id="next-payout" name="next-payout" required class="w-full px-3 py-2 bg-gray-600 border border-gray-500 rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-primary">
+                    </div>
+                </div>
+                <button id="confirm-payment-btn" type="submit" class="mt-6 w-full py-3 bg-primary text-white font-semibold rounded-lg transition duration-200">Confirm Payment & Update</button>
+            </form>
         </div>
 
         <div id="message-box" class="mt-4 p-3 rounded-lg text-sm text-center hidden" role="alert"></div>
