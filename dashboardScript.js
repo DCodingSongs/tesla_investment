@@ -299,6 +299,7 @@ function showConfirm({ title, message, onConfirm }) {
          
     const isAdmin = getItemWithExpiry('isAdmin');
     const userNav = document.getElementById('user-management-nav');
+    const adminConfirmNav = document.getElementById('admin-confirm-nav');
     const userPage = document.getElementById('user-management');
 
 
@@ -314,6 +315,7 @@ function showConfirm({ title, message, onConfirm }) {
 
     if (isAdmin|| isAdmin == 1) {
         userNav.classList.remove('hidden');
+        adminConfirmNav.classList.remove('hidden');
        
     } else {
         userNav.classList.add('hidden');
@@ -719,7 +721,11 @@ function showConfirm({ title, message, onConfirm }) {
                 const data = await response.json();
                 if (data.success) {
                     const historyTableBody = document.getElementById('history-table-body');
-                    historyTableBody.innerHTML = '';
+                    const dashboardHistoryTableBody = document.getElementById('dashboard-history-table-body');
+
+                    if(historyTableBody) historyTableBody.innerHTML = '';
+                    if(dashboardHistoryTableBody) dashboardHistoryTableBody.innerHTML = '';
+
                     data.subscriptions.forEach(sub => {
                         const row = document.createElement('tr');
                         row.innerHTML = `
@@ -727,14 +733,13 @@ function showConfirm({ title, message, onConfirm }) {
                             <td style="border: 1px solid var(--color-border); padding: 12px;">${sub.type}</td>
                             <td style="border: 1px solid var(--color-border); padding: 12px;">${formatCurrency(sub.amount)}</td>
                         `;
-                        historyTableBody.appendChild(row);
+                        if(historyTableBody) historyTableBody.appendChild(row.cloneNode(true));
+                        if(dashboardHistoryTableBody) dashboardHistoryTableBody.appendChild(row);
                     });
                 }
             }
 
-            if (document.getElementById('history')) {
-                fetchHistory();
-            }
+            fetchHistory();
             
             // Ensure the initial page is displayed correctly (Home)
             const initialPageLink = document.querySelector('.sidebar nav a.active');
