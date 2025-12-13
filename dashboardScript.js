@@ -478,12 +478,18 @@ function showConfirm({ title, message, onConfirm }) {
 
             const user = JSON.parse(localStorage.getItem('user'));
             if (user) {
+                debugger
                 const balance = user.balance || 0;
                 const tier = user.tier || 0;
                 const profit = user.totalProfit;
-
+if(balance){
                 document.getElementById('total-balance').textContent = `$${formatCurrency(balance.toFixed(2))}`;
-                // document.getElementById('total-profit').textContent = `$${profit.toFixed(2)}`;
+
+}
+                if(profit){
+
+                    document.getElementById('total-profit').textContent = `$${formatCurrency(profit?.toFixed(2))}`;
+                }
 
             document.getElementById('wallet-balance').textContent = `$${formatCurrency(balance.toFixed(2))}`;
             document.getElementById('wallet-balance').textContent = `$${formatCurrency(balance.toFixed(2))}`;

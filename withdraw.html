@@ -105,6 +105,28 @@
     </div>
 
     <script>
+          document.addEventListener('DOMContentLoaded', () => {
+            function formatCurrency(amount) {
+    // Ensure it's a number
+    const num = Number(amount) || 0;
+    // Convert to comma-separated string with 2 decimal places
+    return num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+        
+            const user = JSON.parse(localStorage.getItem('user'));
+            if (user) {
+                const balance = user.balance || 0;
+                const tier = user.tier || 0;
+                const profit = user.totalProfit;
+
+                document.getElementById('withdrawal-amount').textContent = `$${formatCurrency(balance.toFixed(2))}`;
+                // document.getElementById('total-profit').textContent = `$${profit.toFixed(2)}`;
+}
+        })
+    </script>
+    <script>
+      
         
         document.getElementById('withdraw-form').addEventListener('submit', function(e) {
             e.preventDefault(); // Stop default form submission
