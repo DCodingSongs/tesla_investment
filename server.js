@@ -488,7 +488,7 @@ app.post('/api/v1/auth/reset-password', async (req, res) => {
 
 app.get('/api/v1/admin/search-user', adminRequired, async (req, res) => {
     const { email } = req.query;
-    const user = db.prepare('SELECT id, name, email, balance FROM users WHERE email LIKE ?').get(`%${email}%`);
+    const user = db.prepare('SELECT id, name, email, balance, totalProfit, activeInvestment, nextPayout FROM users WHERE email LIKE ?').get(`%${email}%`);
     if (user) {
         res.json({ success: true, user });
     } else {
@@ -497,23 +497,28 @@ app.get('/api/v1/admin/search-user', adminRequired, async (req, res) => {
 });
 
 app.post('/api/v1/admin/confirm-payment', adminRequired, async (req, res) => {
-    const { userId } = req.body;
+    const { userId, balance, totalProfit, activeInvestment, nextPayout } = req.body;
+
     const user = db.prepare('SELECT * FROM users WHERE id = ?').get(userId);
     if (!user) {
         return res.status(404).json({ success: false, message: 'User not found.' });
     }
-    const newBalance = user.balance + (user.tier * 1000); // Example payment logic
-    db.prepare('UPDATE users SET balance = ? WHERE id = ?').run(newBalance, userId);
+
+    db.prepare(`
+        UPDATE users
+        SET balance = ?, totalProfit = ?, activeInvestment = ?, nextPayout = ?
+        WHERE id = ?
+    `).run(balance, totalProfit, activeInvestment, nextPayout, userId);
 
     const subscription = {
         userId,
         date: new Date().toISOString().split('T')[0],
-        amount: (user.tier * 1000),
-        type: `Tier ${user.tier} Payment`
+        amount: activeInvestment, // Assuming the active investment is the amount for the history entry
+        type: `Investment Update`
     };
     db.prepare('INSERT INTO subscriptions (userId, date, amount, type) VALUES (?, ?, ?, ?)').run(subscription.userId, subscription.date, subscription.amount, subscription.type);
 
-    res.json({ success: true, newBalance });
+    res.json({ success: true, message: 'User updated successfully.' });
 });
 
 app.get('/api/v1/subscriptions', async (req, res) => {

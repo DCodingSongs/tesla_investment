@@ -41,7 +41,27 @@
             <p class="text-gray-300"><strong>Name:</strong> <span id="user-name"></span></p>
             <p class="text-gray-300"><strong>Email:</strong> <span id="user-email"></span></p>
             <p class="text-gray-300"><strong>Balance:</strong> $<span id="user-balance"></span></p>
-            <button id="confirm-payment-btn" class="mt-4 w-full py-3 bg-primary text-white font-semibold rounded-lg transition duration-200">Confirm Payment</button>
+            <form id="update-user-form" class="mt-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label for="total-balance" class="block text-sm font-medium text-gray-300 mb-1">Total Balance</label>
+                        <input type="number" step="0.01" id="total-balance" name="total-balance" required class="w-full px-3 py-2 bg-gray-600 border border-gray-500 rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-primary">
+                    </div>
+                    <div>
+                        <label for="total-profit" class="block text-sm font-medium text-gray-300 mb-1">Total Profit</label>
+                        <input type="number" step="0.01" id="total-profit" name="total-profit" required class="w-full px-3 py-2 bg-gray-600 border border-gray-500 rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-primary">
+                    </div>
+                    <div>
+                        <label for="active-investment" class="block text-sm font-medium text-gray-300 mb-1">Active Investment</label>
+                        <input type="number" step="0.01" id="active-investment" name="active-investment" required class="w-full px-3 py-2 bg-gray-600 border border-gray-500 rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-primary">
+                    </div>
+                    <div>
+                        <label for="next-payout" class="block text-sm font-medium text-gray-300 mb-1">Next Payout Date</label>
+                        <input type="date" id="next-payout" name="next-payout" required class="w-full px-3 py-2 bg-gray-600 border border-gray-500 rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-primary">
+                    </div>
+                </div>
+                <button id="confirm-payment-btn" type="submit" class="mt-6 w-full py-3 bg-primary text-white font-semibold rounded-lg transition duration-200">Confirm Payment & Update</button>
+            </form>
         </div>
 
         <div id="message-box" class="mt-4 p-3 rounded-lg text-sm text-center hidden" role="alert"></div>
@@ -54,7 +74,7 @@
         const userNameSpan = document.getElementById('user-name');
         const userEmailSpan = document.getElementById('user-email');
         const userBalanceSpan = document.getElementById('user-balance');
-        const confirmPaymentBtn = document.getElementById('confirm-payment-btn');
+        const updateUserForm = document.getElementById('update-user-form');
         const messageBox = document.getElementById('message-box');
         let currentUser = null;
 
@@ -88,6 +108,11 @@
                     userNameSpan.textContent = currentUser.name;
                     userEmailSpan.textContent = currentUser.email;
                     userBalanceSpan.textContent = currentUser.balance;
+                    // Pre-fill form fields with existing data if available
+                    document.getElementById('total-balance').value = currentUser.balance || '';
+                    document.getElementById('total-profit').value = currentUser.totalProfit || '';
+                    document.getElementById('active-investment').value = currentUser.activeInvestment || '';
+                    document.getElementById('next-payout').value = currentUser.nextPayout || '';
                     userInfoDiv.classList.remove('hidden');
                 } else {
                     userInfoDiv.classList.add('hidden');
@@ -98,9 +123,17 @@
             }
         });
 
-        confirmPaymentBtn.addEventListener('click', async () => {
-            debugger
+        updateUserForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
             if (!currentUser) return;
+
+            const updatedData = {
+                userId: currentUser.id,
+                balance: document.getElementById('total-balance').value,
+                totalProfit: document.getElementById('total-profit').value,
+                activeInvestment: document.getElementById('active-investment').value,
+                nextPayout: document.getElementById('next-payout').value
+            };
 
             try {
                 const userToken = JSON.parse(localStorage.getItem('userToken'));
@@ -111,25 +144,20 @@
                         'Content-Type': 'application/json',
                         'Authorization': `Bearer ${token}`
                     },
-                    body: JSON.stringify({ userId: currentUser.id })
+                    body: JSON.stringify(updatedData)
                 });
                 const data = await response.json();
-                debugger
                 if (response.ok && data.success) {
-                    debugger
-
-                    userSearchInput1.value = '';
-                userInfoDiv.classList.add('hidden');
-                currentUser = null;
-                    showMessage('Payment confirmed successfully.', 'success');
-                    userBalanceSpan.textContent = data.newBalance;
+                    userSearchInput.value = '';
+                    userInfoDiv.classList.add('hidden');
+                    currentUser = null;
+                    showMessage('Payment confirmed and user updated successfully.', 'success');
                 } else {
-                    showMessage(data.message || 'Failed to confirm payment.', 'error');
+                    showMessage(data.message || 'Failed to update user.', 'error');
                 }
             } catch (error) {
-                debugger
-                console.error('Error confirming payment:', error);
-                showMessage('An error occurred while confirming payment.', 'error');
+                console.error('Error updating user:', error);
+                showMessage('An error occurred while updating the user.', 'error');
             }
         });
 

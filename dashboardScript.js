@@ -587,6 +587,7 @@ function showConfirm({ title, message, onConfirm }) {
                             const tierName = tierMap[user.tier] || 'N/A';
                             const row = document.createElement('tr');
                             row.innerHTML = `
+                                <td>${user.id}</td>
                                 <td>${user.name}</td>
                                 <td>${user.email}</td>
                                 <td>${formatCurrency(user.balance)}</td>
@@ -616,6 +617,7 @@ function showConfirm({ title, message, onConfirm }) {
                         const tierName = tierMap[user.tier] || 'N/A';
                         const row = document.createElement('tr');
                         row.innerHTML = `
+                            <td>${user.id}</td>
                             <td>${user.name}</td>
                             <td>${user.email}</td>
                             <td>${formatCurrency(user.balance)}</td>

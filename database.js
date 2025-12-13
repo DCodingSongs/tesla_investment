@@ -20,7 +20,9 @@ function initializeDatabase() {
         totalProfit REAL,
         subscribed BOOLEAN,
         tier INTEGER,
-        address TEXT
+        address TEXT,
+        activeInvestment REAL,
+        nextPayout TEXT
       )
     `).run();
 
