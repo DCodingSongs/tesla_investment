@@ -19,9 +19,9 @@
         const profileAvatar = document.getElementById('profile-avatar');
         
         // Chat Elements
-        const chatMessages = document.getElementById('chatMessages');
-        const chatInput = document.getElementById('chatInput');
-        const sendMessageButton = document.getElementById('sendMessageButton');
+        // const chatMessages = document.getElementById('chatMessages');
+        // const chatInput = document.getElementById('chatInput');
+        // const sendMessageButton = document.getElementById('sendMessageButton');
 
         // Message box elements
         const messageBox = document.getElementById('messageBox');
@@ -180,91 +180,91 @@ async function loadProfile() {
 }
         // --- Chat Functions ---
         
-        function connectChatSocket() {
-            const token = checkAuth();
-            if (!token) return;
+        // function connectChatSocket() {
+        //     const token = checkAuth();
+        //     if (!token) return;
             
-            // Disconnect any existing socket before connecting
-            if (chatSocket) {
-                chatSocket.disconnect();
-            }
+        //     // Disconnect any existing socket before connecting
+        //     if (chatSocket) {
+        //         chatSocket.disconnect();
+        //     }
 
-            chatSocket = io(window.location.origin, {
-                query: { token: token }
-            });
+        //     chatSocket = io(window.location.origin, {
+        //         query: { token: token }
+        //     });
 
-            chatSocket.on('connect', () => {
-                console.log('Socket.IO connected as client.');
-                // Request initial history upon connection
-                fetchMessages(); 
-            });
+        //     chatSocket.on('connect', () => {
+        //         console.log('Socket.IO connected as client.');
+        //         // Request initial history upon connection
+        //         fetchMessages();
+        //     });
 
-            chatSocket.on('history', (messages) => {
-                chatMessages.innerHTML = '';
-                messages.forEach(renderMessage);
-                chatMessages.scrollTop = chatMessages.scrollHeight;
-            });
+        //     chatSocket.on('history', (messages) => {
+        //         chatMessages.innerHTML = '';
+        //         messages.forEach(renderMessage);
+        //         chatMessages.scrollTop = chatMessages.scrollHeight;
+        //     });
             
-            chatSocket.on('message', (message) => {
-                renderMessage(message);
-                chatMessages.scrollTop = chatMessages.scrollHeight;
-            });
+        //     chatSocket.on('message', (message) => {
+        //         renderMessage(message);
+        //         chatMessages.scrollTop = chatMessages.scrollHeight;
+        //     });
 
-            chatSocket.on('error', (err) => {
-                console.error('Socket Error:', err);
-                showMessageBox('Chat Error', 'Connection lost or unauthorized chat access.', 'error');
-            });
+        //     chatSocket.on('error', (err) => {
+        //         console.error('Socket Error:', err);
+        //         showMessageBox('Chat Error', 'Connection lost or unauthorized chat access.', 'error');
+        //     });
 
-            chatSocket.on('disconnect', () => {
-                console.log('Socket.IO disconnected.');
-            });
-        }
+        //     chatSocket.on('disconnect', () => {
+        //         console.log('Socket.IO disconnected.');
+        //     });
+        // }
 
 
         /**
          * Renders a single message bubble into the chat window.
          */
-        function renderMessage(message) {
-            const messageElement = document.createElement('div');
-            // Determine class: message.isAdmin is true if it comes from the admin user ID or the system
-            const messageClass = message.isAdmin ? 'admin' : 'client';
+        // function renderMessage(message) {
+        //     const messageElement = document.createElement('div');
+        //     // Determine class: message.isAdmin is true if it comes from the admin user ID or the system
+        //     const messageClass = message.isAdmin ? 'admin' : 'client';
             
-            // Format timestamp
-            const date = new Date(); // Use current time for simplicity, or message.timestamp if server sends full date
-            const timeString = message.timestamp || date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        //     // Format timestamp
+        //     const date = new Date(); // Use current time for simplicity, or message.timestamp if server sends full date
+        //     const timeString = message.timestamp || date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
             
-            messageElement.classList.add('message', messageClass);
-            messageElement.innerHTML = `
-                <div class="message-bubble">${message.message}</div>
-                <div class="message-info">${message.isAdmin  === 1? 'Support' : 'You'} • ${timeString}</div>
-            `;
-            chatMessages.appendChild(messageElement);
-        }
+        //     messageElement.classList.add('message', messageClass);
+        //     messageElement.innerHTML = `
+        //         <div class="message-bubble">${message.message}</div>
+        //         <div class="message-info">${message.isAdmin  === 1? 'Support' : 'You'} • ${timeString}</div>
+        //     `;
+        //     chatMessages.appendChild(messageElement);
+        // }
 
         /**
          * Sends a new message to the server via socket.
          */
-        function sendMessage() {
-            const text = chatInput.value.trim();
-            if (!text || !chatSocket || !chatSocket.connected) {
-                showMessageBox('Chat Status', 'Cannot send: Chat is disconnected.', 'error');
-                return;
-            }
+        // function sendMessage() {
+        //     const text = chatInput.value.trim();
+        //     if (!text || !chatSocket || !chatSocket.connected) {
+        //         showMessageBox('Chat Status', 'Cannot send: Chat is disconnected.', 'error');
+        //         return;
+        //     }
 
-            chatSocket.emit('clientMessage', { message: text });
-            chatInput.value = ''; 
-            sendMessageButton.disabled = true; 
+        //     chatSocket.emit('clientMessage', { message: text });
+        //     chatInput.value = '';
+        //     sendMessageButton.disabled = true;
             
-            // Re-enable button after a short delay to simulate network latency
-            setTimeout(() => {
-                 sendMessageButton.disabled = false;
-            }, 500);
-        }
+        //     // Re-enable button after a short delay to simulate network latency
+        //     setTimeout(() => {
+        //          sendMessageButton.disabled = false;
+        //     }, 500);
+        // }
 
         // Fetch messages is now just for initial load/manual refresh, history is managed by socket 'history' event
-        function fetchMessages() {
-             // If connected, the socket handles history automatically.
-        }
+        // function fetchMessages() {
+        //      // If connected, the socket handles history automatically.
+        // }
 
         const confirmModal = document.getElementById('confirmModal');
 const confirmTitle = document.getElementById('confirmTitle');
@@ -415,14 +415,18 @@ function showConfirm({ title, message, onConfirm }) {
                         targetPage.classList.remove('hidden');
                         
                         // Special: If navigating to Chat, connect the socket
-                        if (targetPageId === 'chat') {
-                            connectChatSocket();
-                        } else {
-                            // Disconnect when navigating away from chat
-                            if (chatSocket) {
-                                chatSocket.disconnect();
-                                chatSocket = null;
-                            }
+                        // if (targetPageId === 'chat') {
+                        //     connectChatSocket();
+                        // } else {
+                        //     // Disconnect when navigating away from chat
+                        //     if (chatSocket) {
+                        //         chatSocket.disconnect();
+                        //         chatSocket = null;
+                        //     }
+                        // }
+
+                        if (targetPageId === 'history') {
+                            fetchHistory();
                         }
                     }
 
@@ -501,19 +505,23 @@ function showConfirm({ title, message, onConfirm }) {
             }
             
             // 6. Chat Message Sending Handlers
-            if (sendMessageButton) {
-                sendMessageButton.addEventListener('click', sendMessage);
-                chatInput.addEventListener('keypress', (e) => {
-                    if (e.key === 'Enter') {
-                        e.preventDefault(); // Prevent form submission if input is wrapped in form
-                        sendMessage();
-                    }
-                });
-            }
+
+            // 6. Chat Message Sending Handlers
+            // if (sendMessageButton) {
+            //     sendMessageButton.addEventListener('click', sendMessage);
+            //     chatInput.addEventListener('keypress', (e) => {
+            //         if (e.key === 'Enter') {
+            //             e.preventDefault(); // Prevent form submission if input is wrapped in form
+            //             sendMessage();
+            //         }
+            //     });
+            // }
 
             // --- Admin User Management ---
             const userManagementPage = document.getElementById('user-management');
             if (userManagementPage) {
+                let allUsers = [];
+                const userSearchInput = document.getElementById('user-search-input');
                 const addUserBtn = document.getElementById('add-user-btn');
                 const addUserModal = document.getElementById('add-user-modal');
                 const editUserModal = document.getElementById('edit-user-modal');
@@ -533,6 +541,7 @@ function showConfirm({ title, message, onConfirm }) {
                     const data = await response.json();
                     
                     if (data.success) {
+                        allUsers = data.users.filter(user => user?.id !== loggedInUserId);
                             const tierMap = {
                             0: 'N/A',
                             1: 'Bronze Tier',
@@ -560,6 +569,43 @@ function showConfirm({ title, message, onConfirm }) {
                         });
                     }
                 }
+
+                function renderUsers(users) {
+                    const tierMap = {
+                        0: 'N/A',
+                        1: 'Bronze Tier',
+                        2: 'Silver Tier',
+                        3: 'Gold Tier',
+                        4: 'Platinum Tier',
+                        5: 'Diamond Tier',
+                        6: 'Centurion Tier'
+                    };
+                    userTableBody.innerHTML = '';
+                    users.forEach(user => {
+                        const tierName = tierMap[user.tier] || 'N/A';
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>${user.name}</td>
+                            <td>${user.email}</td>
+                            <td>${formatCurrency(user.balance)}</td>
+                            <td>${tierName}</td>
+                            <td>
+                                <button class="edit-btn" data-id="${user.id}">Edit</button>
+                                <button class="delete-btn" data-id="${user.id}">Delete</button>
+                            </td>
+                        `;
+                        userTableBody.appendChild(row);
+                    });
+                }
+
+                userSearchInput.addEventListener('input', () => {
+                    const searchTerm = userSearchInput.value.toLowerCase();
+                    const filteredUsers = allUsers.filter(user =>
+                        user.name.toLowerCase().includes(searchTerm) ||
+                        user.email.toLowerCase().includes(searchTerm)
+                    );
+                    renderUsers(filteredUsers);
+                });
 
                 addUserBtn.addEventListener('click', () => {
                     addUserModal.style.display = 'block';
@@ -663,6 +709,31 @@ function showConfirm({ title, message, onConfirm }) {
                 if (getItemWithExpiry('isAdmin')) {
                     fetchUsers();
                 }
+            }
+
+            async function fetchHistory() {
+                const token = getItemWithExpiry('userToken');
+                const response = await fetch('/api/v1/subscriptions', {
+                    headers: getAuthHeaders(token)
+                });
+                const data = await response.json();
+                if (data.success) {
+                    const historyTableBody = document.getElementById('history-table-body');
+                    historyTableBody.innerHTML = '';
+                    data.subscriptions.forEach(sub => {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td style="border: 1px solid var(--color-border); padding: 12px;">${sub.date}</td>
+                            <td style="border: 1px solid var(--color-border); padding: 12px;">${sub.type}</td>
+                            <td style="border: 1px solid var(--color-border); padding: 12px;">${formatCurrency(sub.amount)}</td>
+                        `;
+                        historyTableBody.appendChild(row);
+                    });
+                }
+            }
+
+            if (document.getElementById('history')) {
+                fetchHistory();
             }
             
             // Ensure the initial page is displayed correctly (Home)

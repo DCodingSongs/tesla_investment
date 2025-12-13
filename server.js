@@ -4,6 +4,7 @@ const socketIo = require('socket.io');
 const jwt = require('jsonwebtoken');
 const bodyParser = require('body-parser');
 const bcrypt = require('bcrypt');
+const crypto = require('crypto');
 const initializeDatabase = require('./database');
 
 const saltRounds = 10;
@@ -91,6 +92,24 @@ function userExists(db, email) {
 
 function getTimestamp() {
     return new Date().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
+}
+
+function adminRequired(req, res, next) {
+    const authHeader = req.headers.authorization;
+    if (!authHeader) {
+        return res.status(401).json({ success: false, message: 'Authorization header required.' });
+    }
+    const token = authHeader.split(' ')[1];
+    try {
+        const decoded = jwt.verify(token, SECRET_KEY);
+        if (!decoded.isAdmin) {
+            return res.status(403).json({ success: false, message: 'Forbidden.' });
+        }
+        req.user = decoded;
+        next();
+    } catch (err) {
+        return res.status(403).json({ success: false, message: 'Invalid or expired token.' });
+    }
 }
 
 
@@ -371,14 +390,92 @@ app.post('/api/v1/auth/signup', async (req, res) => {
         return res.status(201).json({
             success: true,
             message: 'Sign up successful.',
-            user: safeUserData
+            user: safeUserData,
+            redirect: '/login.html'
         });
 
     } catch (err) {
         console.error('Signup error:', err);
         return res.status(500).json({ success: false, message: 'Failed to create user.' });
     }
-});;
+});
+
+app.post('/api/v1/auth/forgot-password', async (req, res) => {
+    const { email } = req.body;
+    const user = db.prepare('SELECT * FROM users WHERE email = ?').get(email);
+    if (!user) {
+        return res.status(404).json({ success: false, message: 'User not found.' });
+    }
+    const token = crypto.randomBytes(32).toString('hex');
+    const expires = Date.now() + 3600000; // 1 hour
+    db.prepare('INSERT OR REPLACE INTO password_resets (email, token, expires) VALUES (?, ?, ?)').run(email, token, expires);
+
+    // In a real app, you would send an email with the reset link.
+    // For this example, we'll just log it to the console.
+    console.log(`Password reset link for ${email}: ${req.protocol}://${req.get('host')}/reset_password.html?token=${token}`);
+
+    res.json({ success: true, message: 'Password reset link sent to your email.' });
+});
+
+app.post('/api/v1/auth/reset-password', async (req, res) => {
+    const { token, password } = req.body;
+    const reset = db.prepare('SELECT * FROM password_resets WHERE token = ?').get(token);
+
+    if (!reset || reset.expires < Date.now()) {
+        return res.status(400).json({ success: false, message: 'Invalid or expired token.' });
+    }
+
+    const hash = await bcrypt.hash(password, saltRounds);
+    db.prepare('UPDATE users SET password = ? WHERE email = ?').run(hash, reset.email);
+    db.prepare('DELETE FROM password_resets WHERE token = ?').run(token);
+
+    res.json({ success: true, message: 'Password has been reset successfully.' });
+});
+
+app.get('/api/v1/admin/search-user', adminRequired, async (req, res) => {
+    const { email } = req.query;
+    const user = db.prepare('SELECT id, name, email, balance FROM users WHERE email LIKE ?').get(`%${email}%`);
+    if (user) {
+        res.json({ success: true, user });
+    } else {
+        res.status(404).json({ success: false, message: 'User not found.' });
+    }
+});
+
+app.post('/api/v1/admin/confirm-payment', adminRequired, async (req, res) => {
+    const { userId } = req.body;
+    const user = db.prepare('SELECT * FROM users WHERE id = ?').get(userId);
+    if (!user) {
+        return res.status(404).json({ success: false, message: 'User not found.' });
+    }
+    const newBalance = user.balance + (user.tier * 1000); // Example payment logic
+    db.prepare('UPDATE users SET balance = ? WHERE id = ?').run(newBalance, userId);
+
+    const subscription = {
+        userId,
+        date: new Date().toISOString().split('T')[0],
+        amount: (user.tier * 1000),
+        type: `Tier ${user.tier} Payment`
+    };
+    db.prepare('INSERT INTO subscriptions (userId, date, amount, type) VALUES (?, ?, ?, ?)').run(subscription.userId, subscription.date, subscription.amount, subscription.type);
+
+    res.json({ success: true, newBalance });
+});
+
+app.get('/api/v1/subscriptions', async (req, res) => {
+    const authHeader = req.headers.authorization;
+    if (!authHeader) {
+        return res.status(401).json({ success: false, message: 'Authorization header required.' });
+    }
+    const token = authHeader.split(' ')[1];
+    try {
+        const decoded = jwt.verify(token, SECRET_KEY);
+        const subscriptions = db.prepare('SELECT * FROM subscriptions WHERE userId = ?').all(decoded.id);
+        res.json({ success: true, subscriptions });
+    } catch (err) {
+        return res.status(403).json({ success: false, message: 'Invalid or expired token.' });
+    }
+});
 }
 
 
@@ -388,142 +485,6 @@ let adminUserId;
 
 function initializeServer(db) {
     initializeRoutes(db);
-    io.on('connection', (socket) => {
-    
-    let userId;
-    // Check for admin status from query, defaults to false if not present or not 'true'
-    let isAdmin = socket.handshake.query.isAdmin === 'true'; 
-    
-    // 1. Determine User ID and Admin Status based on JWT payload first
-    if (socket.userData) {
-        // Authenticated client/admin via JWT
-        userId = socket.userData.id;
-        isAdmin = socket.userData.isAdmin;
-    } else if (isAdmin) {
-        // Unauthenticated connection identifying as Admin (allowed if admin.html provides the correct key)
-        userId = adminUserId;
-    } else {
-        // Unauthenticated standard client (e.g., just opened the page)
-        userId = socket.id; // Fallback to socket ID
-    }
-    
-    // Attach details to socket for later use
-    socket.userId = userId;
-    socket.isAdmin = isAdmin;
-
-    // *** FIXED: Added backtick (`) to open the template literal ***
-    console.log(`[${getTimestamp()}] A user connected: ${userId} (Admin: ${isAdmin}) | Socket: ${socket.id}`);
-    activeConnections[userId] = socket.id;
-
-    // Initialize history for new, non-admin clients if needed
-    if (!isAdmin && !chatHistoryByClient[userId]) {
-        chatHistoryByClient[userId] = [];
-        chatHistoryByClient[userId].push({
-            userId: 'System',
-            message: 'Welcome to TESLAAI Live Support. How can we help you?',
-            timestamp: getTimestamp(),
-            isAdmin: true,
-            clientDisplay: true // Only show for the client's view
-        });
-    }
-
-    // --- CLIENT (dashboard.html) Events ---
-    if (!isAdmin) {
-        // 1. Send Client History
-        socket.emit('history', chatHistoryByClient[userId] || []);
-
-        // 2. Handle incoming client messages
-        socket.on('clientMessage', (msg) => {
-            const messageData = {
-                userId: userId, 
-                message: msg.message,
-                timestamp: getTimestamp(),
-                isAdmin: false
-            };
-
-            // Store message for this client
-            if (chatHistoryByClient[userId]) {
-                chatHistoryByClient[userId].push(messageData);
-            }
-            
-            // Send the message back to the client
-            socket.emit('message', messageData);
-            
-            // Notify active admin sockets about the new message
-            io.emit('newMessage', messageData); 
-        });
-    }
-
-    // --- ADMIN (admin.html) Events ---
-    if (isAdmin) {
-        // 1. Request List of Clients
-        socket.on('requestClientList', () => {
-            const clientList = Object.keys(chatHistoryByClient).map(clientId => {
-                const history = chatHistoryByClient[clientId];
-                const lastMessage = history.length > 0 ? history[history.length - 1] : { message: 'No messages yet.', timestamp: 0 };
-                return {
-                    clientId: clientId,
-                    lastMessageTime: lastMessage.timestamp,
-                    lastMessageSummary: lastMessage.message.substring(0, 30) + (lastMessage.message.length > 30 ? '...' : ''),
-                    // Simple logic for active status: check if socket ID is in active connections
-                    isActive: !!activeConnections[clientId] 
-                };
-            });
-            socket.emit('clientList', clientList);
-        });
-        
-        // 2. Request Specific Client History
-        socket.on('requestChatHistory', (clientId) => {
-            if (chatHistoryByClient[clientId]) {
-                socket.emit('chatHistory', {
-                    clientId: clientId,
-                    history: chatHistoryByClient[clientId]
-                });
-            }
-        });
-        
-        // 3. Handle Admin Reply to Client
-        socket.on('adminReply', (data) => {
-            const { clientId, message } = data;
-            
-            const messageData = {
-                userId: adminUserId,
-                message: message,
-                timestamp: getTimestamp(),
-                isAdmin: true
-            };
-            
-            // Store message for this client
-            if (chatHistoryByClient[clientId]) {
-                chatHistoryByClient[clientId].push(messageData);
-            }
-            
-            // 1. Send to the specific target client
-            const clientSocketId = activeConnections[clientId];
-            if (clientSocketId) {
-                // Find the socket ID and send the message
-                io.to(clientSocketId).emit('message', messageData);
-            } else {
-                // *** FIXED: Added backtick (`) to open the template literal ***
-                console.log(`[${getTimestamp()}] Client ${clientId} is offline, message stored.`);
-            }
-
-            // 2. Send back to all admins (including self) to keep views updated
-            // We use io.emit('newMessage') which will be caught by the admin's 'newMessage' handler
-            io.emit('newMessage', messageData); 
-        });
-    }
-
-    // --- Disconnect Handler ---
-    socket.on('disconnect', () => {
-        // Only remove the socket ID from active connections. We keep the chat history.
-        if (activeConnections[socket.userId] === socket.id) {
-            delete activeConnections[socket.userId];
-        }
-        // *** FIXED: Added backtick (`) to open the template literal ***
-        console.log(`[${getTimestamp()}] User disconnected: ${socket.userId}`);
-    });
-    });
 }
 
 

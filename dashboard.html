@@ -1001,7 +1001,7 @@ position: relative;
                 <a href="#new-investment" data-page="new-investment" class="hidden" id="new-investment-nav"><i class="fas fa-chart-line"></i> New Investment</a>
                 <a href="#history" data-page="history" class="hidden" id="history-nav"><i class="fas fa-clock-rotate-left" ></i> History</a>
                 <a href="#user-management" data-page="user-management" id="user-management-nav" class="hidden"><i class="fas fa-users-cog"></i> User Management</a>
-                <a href="#chat" data-page="chat"><i class="fas fa-comment-dots"></i> Live Support</a>
+                <!-- <a href="#chat" data-page="chat"><i class="fas fa-comment-dots"></i> Live Support</a> -->
                 <a href="#profile" data-page="profile"><i class="fas fa-user-circle"></i> Profile</a>
             </nav>
             <!-- id="logout-button" -->
@@ -1309,24 +1309,22 @@ position: relative;
                 <div class="content-panel">
                     <h2>⏳ Transaction & Investment History</h2>
                     <p style="color: var(--color-text-light); margin-bottom: 20px;">All transactions are recorded here.</p>
-                    <div class="recent-activity" style="padding: 20px;">
-                        <div class="activity-list">
-                            <div class="transaction-item" style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px dashed var(--color-border);">
-                                <span>2025-11-28</span>
-                                <span class="type">Registration Bonus</span>
-                                <span class="amount deposit" style="color: var(--color-success); font-weight: 600;">+$200.00</span>
-                            </div>
-                            <div class="transaction-item" style="display: flex; justify-content: space-between; padding: 10px 0;">
-                                <span>2025-11-28</span>
-                                <span class="type">Account Creation</span>
-                                <span class="amount" style="color: var(--color-text-light);">$0.00</span>
-                            </div>
-                        </div>
-                    </div>
+                    <table id="history-table" style="width: 100%; border-collapse: collapse; margin-top: 20px;">
+                        <thead>
+                            <tr>
+                                <th style="border: 1px solid var(--color-border); padding: 12px; text-align: left; background-color: #374151; color: white;">Date</th>
+                                <th style="border: 1px solid var(--color-border); padding: 12px; text-align: left; background-color: #374151; color: white;">Type</th>
+                                <th style="border: 1px solid var(--color-border); padding: 12px; text-align: left; background-color: #374151; color: white;">Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody id="history-table-body">
+                            <!-- Subscription data will be inserted here -->
+                        </tbody>
+                    </table>
                 </div>
             </div>
             
-            <div id="chat" class="page-content hidden">
+            <!-- <div id="chat" class="page-content hidden">
                 <h2>💬 Live Support Chat</h2>
                 <div class="chat-container">
                     <div class="chat-header">
@@ -1339,7 +1337,7 @@ position: relative;
                         <button id="sendMessageButton"><i class="fas fa-paper-plane"></i> Send</button>
                     </div>
                 </div>
-            </div>
+            </div> -->
 
             <div id="profile" class="page-content hidden">
                 <div class="content-panel">
@@ -1382,6 +1380,7 @@ position: relative;
                 <h2>👥 User Management</h2>
                 <div class="content-panel">
                     <button id="add-user-btn" class="cta-button">Add User</button>
+                    <input type="text" id="user-search-input" placeholder="Search users by name or email" style="margin-top: 1rem; width: 100%; padding: 0.75rem; border-radius: 0.5rem; border: 1px solid var(--color-border); background-color: #111827; color: white;">
                     <table id="user-table">
                         <thead>
                             <tr>
