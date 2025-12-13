@@ -1330,6 +1330,8 @@ position: relative;
                 <div class="content-panel">
                     <h2>⏳ Transaction & Investment History</h2>
                     <p style="color: var(--color-text-light); margin-bottom: 20px;">All transactions are recorded here.</p>
+
+                    <h3 style="color: var(--color-primary); margin-top: 2rem; margin-bottom: 1rem;">Investment History</h3>
                     <table id="history-table" style="width: 100%; border-collapse: collapse; margin-top: 20px;">
                         <thead>
                             <tr>
@@ -1340,6 +1342,35 @@ position: relative;
                         </thead>
                         <tbody id="history-table-body">
                             <!-- Subscription data will be inserted here -->
+                        </tbody>
+                    </table>
+
+                    <h3 style="color: var(--color-primary); margin-top: 2rem; margin-bottom: 1rem;">Deposits</h3>
+                    <table id="deposit-history-table" style="width: 100%; border-collapse: collapse; margin-top: 20px;">
+                        <thead>
+                            <tr>
+                                <th style="border: 1px solid var(--color-border); padding: 12px; text-align: left; background-color: #374151; color: white;">Date</th>
+                                <th style="border: 1px solid var(--color-border); padding: 12px; text-align: left; background-color: #374151; color: white;">Amount</th>
+                                <th style="border: 1px solid var(--color-border); padding: 12px; text-align: left; background-color: #374151; color: white;">Method</th>
+                            </tr>
+                        </thead>
+                        <tbody id="deposit-history-table-body">
+                            <!-- Deposit data will be inserted here -->
+                        </tbody>
+                    </table>
+
+                    <h3 style="color: var(--color-primary); margin-top: 2rem; margin-bottom: 1rem;">Withdrawals</h3>
+                    <table id="withdrawal-history-table" style="width: 100%; border-collapse: collapse; margin-top: 20px;">
+                        <thead>
+                            <tr>
+                                <th style="border: 1px solid var(--color-border); padding: 12px; text-align: left; background-color: #374151; color: white;">Date</th>
+                                <th style="border: 1px solid var(--color-border); padding: 12px; text-align: left; background-color: #374151; color: white;">Amount</th>
+                                <th style="border: 1px solid var(--color-border); padding: 12px; text-align: left; background-color: #374151; color: white;">Method</th>
+                                <th style="border: 1px solid var(--color-border); padding: 12px; text-align: left; background-color: #374151; color: white;">Address</th>
+                            </tr>
+                        </thead>
+                        <tbody id="withdrawal-history-table-body">
+                            <!-- Withdrawal data will be inserted here -->
                         </tbody>
                     </table>
                 </div>
