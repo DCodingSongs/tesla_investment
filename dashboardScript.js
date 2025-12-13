@@ -432,6 +432,12 @@ function showConfirm({ title, message, onConfirm }) {
         recentActivity.classList.remove('hidden');
     }
 
+         
+                if(isAdmin){
+                  window.location.href = '/admin.html';
+                }
+                
+
     if (!isAdmin || isAdmin == false) {
       
 
