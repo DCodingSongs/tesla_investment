@@ -34,15 +34,15 @@
 
 
 
-// function showPage(page) {
-//     pages.forEach(p => {
-//         if (p.id === page) {
-//             p.style.display = 'block';
-//         } else {
-//             p.style.display = 'none';
-//         }
-//     });
-// }
+function showPage(page) {
+    pages.forEach(p => {
+        if (p.id === page) {
+            p.style.display = 'block';
+        } else {
+            p.style.display = 'none';
+        }
+    });
+}
 
 // Load the correct page on refresh
 window.addEventListener('load', () => {
@@ -236,7 +236,7 @@ async function loadProfile() {
             messageElement.classList.add('message', messageClass);
             messageElement.innerHTML = `
                 <div class="message-bubble">${message.message}</div>
-                <div class="message-info">${message.isAdmin ? 'Support' : 'You'} • ${timeString}</div>
+                <div class="message-info">${message.isAdmin  === 1? 'Support' : 'You'} • ${timeString}</div>
             `;
             chatMessages.appendChild(messageElement);
         }
@@ -297,16 +297,75 @@ function showConfirm({ title, message, onConfirm }) {
 
         document.addEventListener('DOMContentLoaded', () => {
          
-            const sidebar = document.getElementById('sidebar');
-            const menuToggle = document.getElementById('menuToggle');
+    const isAdmin = getItemWithExpiry('isAdmin');
+    const userNav = document.getElementById('user-management-nav');
+    const userPage = document.getElementById('user-management');
+
+
+     const historyNav = document.getElementById('history-nav');
+    const historyPage = document.getElementById('history');
+
+
+       const walletNav = document.getElementById('wallet-nav');
+    const walletPage = document.getElementById('wallet');
+
+     const newInvestmentNav = document.getElementById('new-investment-nav');
+    const newInvestmentPage = document.getElementById('new-investment');
+
+    if (isAdmin|| isAdmin == 1) {
+        userNav.classList.remove('hidden');
+       
+    } else {
+        userNav.classList.add('hidden');
+        historyNav.classList.remove('hidden');
+        walletNav.classList.remove('hidden');
+        newInvestmentNav.classList.remove('hidden');
+    }
+
+    if (!isAdmin || isAdmin == false) {
+      
+
+
+
+        // Optional: redirect to home if user tries to access manually
+        if (window.location.hash === '#user-management') {
+            window.location.hash = '#home';
+            showPage('home'); // call your function to display default page
+        }
+    }
         
             // 1. Initial Authentication Check and Profile Load
             checkAuth();
             loadProfile();
             // Show admin links if user is admin
-            if (getItemWithExpiry('isAdmin') === true) {
-                document.getElementById('user-management-nav').classList.remove('hidden');
+            
+            // if (getItemWithExpiry('isAdmin')) {
+                
+            //     document.getElementById('user-management-nav').classList.remove('hidden');
+               
+            // }
+
+            const navLinks = document.querySelectorAll('.sidebar nav a');
+    navLinks.forEach(link => {
+        link.addEventListener('click', (e) => {
+            e.preventDefault();
+            const targetPageId = link.getAttribute('data-page');
+
+            if (targetPageId === 'user-management' && (!isAdmin || isAdmin == false )) {
+                
+                showMessageBox('Access Denied', 'You do not have permission to access this page.', 'error');
+                return;
             }
+
+            showPage(targetPageId);
+
+            // Update nav active state
+            navLinks.forEach(nav => nav.classList.remove('active'));
+            link.classList.add('active');
+        });
+    });
+
+            
 
             const user = JSON.parse(localStorage.getItem('user'));
             if (user) {
