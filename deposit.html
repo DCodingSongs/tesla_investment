@@ -300,14 +300,46 @@
         
         // Function to move to Step 3 (I Have Sent Payment - CONFIRMATION FIX)
         function confirmPayment() {
-            // Get the amount that was entered in step 1
-            const amount = parseFloat(document.getElementById('amount').value).toFixed(2); 
-            
-            // Update confirmation details for Step 3
-            document.getElementById('confirmed-amount').innerText = '$' + amount;
-            
-            // Move to Step 3
-            updateSteps(3);
+            const amount = parseFloat(document.getElementById('amount').value);
+            const network = document.getElementById('checkout-network').innerText;
+
+            const token = localStorage.getItem('userToken');
+
+            if (token) {
+                fetch('/api/v1/transactions/deposit', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${JSON.parse(token).value}`
+                    },
+                    body: JSON.stringify({
+                        amount: amount,
+                        type: network,
+                        status: 'Pending'
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Get the amount that was entered in step 1
+                        const amountText = parseFloat(document.getElementById('amount').value).toFixed(2);
+
+                        // Update confirmation details for Step 3
+                        document.getElementById('confirmed-amount').innerText = '$' + amountText;
+
+                        // Move to Step 3
+                        updateSteps(3);
+                    } else {
+                        alert('Failed to record deposit: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('An error occurred while recording the deposit.');
+                });
+            } else {
+                alert('Authentication error. Please log in again.');
+            }
         }
 
         function copyAddress() {
