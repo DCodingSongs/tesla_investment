@@ -274,13 +274,13 @@ userSearchInput1.addEventListener('input', async () => {
                 });
                 const data = await response.json();
                 if (response.ok && data.success) {
-                    debugger
+                    // debugger
                     currentUser = data.user;
                     userNameSpan.textContent = currentUser.name;
                     userEmailSpan.textContent = currentUser.email;
                     userBalanceSpan.textContent = currentUser.balance;
                     // Pre-fill form fields with existing data if available
-
+console.log(document.getElementById('form-total-balance'))
 
                     document.getElementById('form-total-balance').value = currentUser.balance || '';
                     document.getElementById('form-total-profit').value = currentUser.totalProfit || '';
