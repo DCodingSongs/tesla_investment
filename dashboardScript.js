@@ -274,15 +274,19 @@ userSearchInput1.addEventListener('input', async () => {
                 });
                 const data = await response.json();
                 if (response.ok && data.success) {
+                    debugger
                     currentUser = data.user;
                     userNameSpan.textContent = currentUser.name;
                     userEmailSpan.textContent = currentUser.email;
                     userBalanceSpan.textContent = currentUser.balance;
                     // Pre-fill form fields with existing data if available
-                    document.getElementById('total-balance').value = currentUser.balance || '';
-                    document.getElementById('total-profit').value = currentUser.totalProfit || '';
-                    document.getElementById('active-investment').value = currentUser.activeInvestment || '';
-                    document.getElementById('next-payout').value = currentUser.nextPayout || '';
+console.log( document.getElementById('form-total-balance'))
+console.log( document.getElementById('update-user-form'))
+
+                    document.getElementById('form-total-balance').value = currentUser.balance || '';
+                    document.getElementById('form-total-profit').value = currentUser.totalProfit || '';
+                    document.getElementById('form-active-investment').value = currentUser.activeInvestment || '';
+                    document.getElementById('form-next-payout').value = currentUser.nextPayout || '';
                     userInfoDiv.classList.remove('hidden');
                 } else {
                     userInfoDiv.classList.add('hidden');
@@ -301,12 +305,14 @@ if(updateUserForm){
             e.preventDefault();
             if (!currentUser) return;
 
+   
+
             const updatedData = {
                 userId: currentUser.id,
-                balance: document.getElementById('total-balance').value,
-                totalProfit: document.getElementById('total-profit').value,
-                activeInvestment: document.getElementById('active-investment').value,
-                nextPayout: document.getElementById('next-payout').value
+                balance: document.getElementById('form-total-balance').value,
+                totalProfit: document.getElementById('form-total-profit').value,
+                activeInvestment: document.getElementById('form-active-investment').value,
+                nextPayout: document.getElementById('form-next-payout').value
             };
             debugger
             console.log(updatedData)
@@ -580,7 +586,7 @@ fetchMe()
                 };
 
                 if (tier > 0 && tierMap[tier]) {
-                    document.getElementById(' next-payout').textContent = JSON.stringify(nextPayout);
+                    document.getElementById('next-payout').textContent = JSON.stringify(nextPayout);
                     document.getElementById('active-investment').textContent = tierMap[tier].name;
                 }
                   
