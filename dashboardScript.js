@@ -31,21 +31,30 @@
         const msgConfirm = document.getElementById('msgConfirm');
 
 
-function getDaysFromToday(dateString) {
+function getSmartDayLabel(dateString) {
     const today = new Date();
-    const targetDate = new Date(dateString);
+    const target = new Date(dateString);
 
-    // Normalize time (avoid timezone issues)
+    // Normalize to midnight (prevents timezone bugs)
     today.setHours(0, 0, 0, 0);
-    targetDate.setHours(0, 0, 0, 0);
+    target.setHours(0, 0, 0, 0);
 
-    const diffTime = targetDate - today;
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    const diffMs = target - today;
+    const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
 
-    if (diffDays > 1) return `${diffDays} days`;
-    if (diffDays === 1) return `1 day`;
-    if (diffDays === 0) return `Today`;
-    return 'Expired'
+    if (diffDays < 0) return 'Expired';
+    if (diffDays === 0) return 'Today';
+    if (diffDays === 1) return 'Tomorrow';
+
+    if (diffDays < 7) return `${diffDays} days`;
+
+    if (diffDays < 14) return 'In 1 week';
+    if (diffDays < 21) return 'In 2 weeks';
+    if (diffDays < 28) return 'In 3 weeks';
+
+    if (diffDays < 60) return 'In 1 month';
+
+    return `In ${Math.floor(diffDays / 30)} months`;
 }
 
 
@@ -577,7 +586,7 @@ fetchMe()
                     const balance = user.balance || 0;
                 const tier = user.tier || 0;
                 const profit = user.totalProfit;
-                const nextPayout = getDaysFromToday(user.nextPayout)
+                const nextPayout = getSmartDayLabel(user.nextPayout)
                if(balance){
                 document.getElementById('total-balance').textContent = `$${formatCurrency(balance.toFixed(2))}`;
 
@@ -601,7 +610,7 @@ fetchMe()
                 };
 
                 if (tier > 0 && tierMap[tier]) {
-                    document.getElementById('next-payout').textContent = JSON.stringify(nextPayout);
+                    document.getElementById('next-payout').textContent = nextPayout
                     document.getElementById('active-investment').textContent = tierMap[tier].name;
                 }
                   
