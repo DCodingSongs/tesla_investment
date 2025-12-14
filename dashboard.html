@@ -1341,10 +1341,22 @@
                         <label for="total-profit" class="block text-sm font-medium text-gray-300 mb-1">Total Profit</label>
                         <input type="number" step="0.01" id="total-profit" name="total-profit" required class="w-full px-3 py-2 bg-gray-600 border border-gray-500 rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-primary">
                     </div>
-                    <div>
-                        <label for="active-investment" class="block text-sm font-medium text-gray-300 mb-1">Active Investment</label>
-                        <input type="number" step="0.01" id="active-investment" name="active-investment" required class="w-full px-3 py-2 bg-gray-600 border border-gray-500 rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-primary">
-                    </div>
+                  
+
+
+                <div class="select-wrapper">
+                 <label for="active-investment" class="block text-sm font-medium text-gray-300 mb-1">Active Investment</label>
+                <select id="active-investment" required class="w-full px-3 py-2 bg-gray-600 border border-gray-500 rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-primary" name="active-investment" >
+                <option value="0">N/A</option>
+                <option value="1">Bronze Tier</option>
+                <option value="2">Silver Tier</option>
+                <option value="3">Gold Tier</option>
+                <option value="4">Platinum Tier</option>
+                <option value="5">Diamond Tier</option>
+                <option value="6">Centurion Tier</option>
+                </select>
+                </div>
+                    
                     <div>
                         <label for="next-payout" class="block text-sm font-medium text-gray-300 mb-1">Next Payout Date</label>
                         <input type="date" id="next-payout" name="next-payout" required class="w-full px-3 py-2 bg-gray-600 border border-gray-500 rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-primary">
@@ -1477,6 +1489,20 @@
                 <input type="number" id="add-balance" required>
                 <label for="add-total-profit">Total Profit:</label>
                 <input type="number" id="add-total-profit" required>
+                <div class="select-wrapper">
+                <label for="edit-tier">Active Investment:</label>
+                <select id="edit-tier" required>
+                <option value="0">N/A</option>
+                <option value="1">Bronze Tier</option>
+                <option value="2">Silver Tier</option>
+                <option value="3">Gold Tier</option>
+                <option value="4">Platinum Tier</option>
+                <option value="5">Diamond Tier</option>
+                <option value="6">Centurion Tier</option>
+                </select>
+                </div>
+
+
                 <label for="add-active-investment">Active Investment:</label>
                 <input type="number" id="add-active-investment" required>
                 <label for="add-next-payout">Next Payout:</label>
@@ -1538,13 +1564,9 @@
                 <input type="number" id="edit-balance" required>
                 <label for="edit-total-profit">Total Profit:</label>
                 <input type="number" id="edit-total-profit" required>
-                <label for="edit-active-investment">Active Investment:</label>
-                <input type="number" id="edit-active-investment" required>
-                <label for="edit-next-payout">Next Payout:</label>
-                <input type="date" id="edit-next-payout" required>
-                <div class="select-wrapper">
-<label for="edit-tier">Tier:</label>
-                 <select id="edit-tier" required>
+             <div class="select-wrapper">
+        <label for="edit-tier">Active Investment:</label>
+        <select id="edit-tier" required>
         <option value="0">N/A</option>
         <option value="1">Bronze Tier</option>
         <option value="2">Silver Tier</option>
@@ -1554,6 +1576,24 @@
         <option value="6">Centurion Tier</option>
     </select>
                 </div>
+
+
+                <!-- <label for="edit-active-investment">Active Investment:</label>
+                <input type="number" id="edit-active-investment" required> -->
+                <label for="edit-next-payout">Next Payout:</label>
+                <input type="date" id="edit-next-payout" required>
+                <!-- <div class="select-wrapper">
+<label for="edit-tier">Tier:</label>
+        <select id="edit-tier" required>
+        <option value="0">N/A</option>
+        <option value="1">Bronze Tier</option>
+        <option value="2">Silver Tier</option>
+        <option value="3">Gold Tier</option>
+        <option value="4">Platinum Tier</option>
+        <option value="5">Diamond Tier</option>
+        <option value="6">Centurion Tier</option>
+    </select>
+                </div> -->
                 
 
                 

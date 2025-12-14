@@ -93,6 +93,7 @@ function formatCurrency(amount) {
         function checkAuth() {
             const token = getItemWithExpiry('userToken');
             if (!token) {
+                debugger
                 // Not authenticated, redirect to login
                 window.location.href = 'login.html'; 
             }
@@ -296,6 +297,7 @@ if(updateUserForm){
 
 
         updateUserForm.addEventListener('submit', async (e) => {
+            debugger
             e.preventDefault();
             if (!currentUser) return;
 
@@ -306,6 +308,8 @@ if(updateUserForm){
                 activeInvestment: document.getElementById('active-investment').value,
                 nextPayout: document.getElementById('next-payout').value
             };
+            debugger
+            console.log(updatedData)
 
             try {
                 const userToken = JSON.parse(localStorage.getItem('userToken'));
@@ -400,13 +404,14 @@ function showConfirm({ title, message, onConfirm }) {
 
         // --- Event Listeners and Initialization ---
 
-    document.addEventListener('DOMContentLoaded', () => {
+    document.addEventListener('DOMContentLoaded', async() => {
+          const loggedInUser = JSON.parse(localStorage.getItem('user')); // get current user
+            const loggedInUserId = loggedInUser ? loggedInUser.id : null;
          const token = checkAuth();
                     if (!token) return;
 
          async function fetchMe() {
-             const loggedInUser = JSON.parse(localStorage.getItem('user')); // get current user
-            const loggedInUserId = loggedInUser ? loggedInUser.id : null;
+           
         try {
     
                 const response = await fetch(`/api/v1/users/${loggedInUserId}`, {
@@ -525,22 +530,44 @@ fetchMe()
 
 
             const user = JSON.parse(localStorage.getItem('user'));
-            if (user) {
-                debugger
-                const balance = user.balance || 0;
+
+
+                try {
+    
+                const response = await fetch(`/api/v1/users/${loggedInUserId}`, {
+                 headers: getAuthHeaders(token)
+                    });
+                let data = {};
+            
+                try {
+                    data = await response.json();
+                } catch (jsonError) {
+                    if (!response.ok) {
+                        throw new Error(`Server returned status ${response.status} but no valid error message.`);
+                    }
+                    throw new Error('Server success response (200) was not valid JSON.');
+                }
+                if (response.ok) {
+           
+                if (data.success) {
+                
+                    const user = data.user;
+
+                    const balance = user.balance || 0;
                 const tier = user.tier || 0;
                 const profit = user.totalProfit;
-if(balance){
+                const nextPayout = user.nextPayout
+               if(balance){
                 document.getElementById('total-balance').textContent = `$${formatCurrency(balance.toFixed(2))}`;
 
-}
+                }
                 if(profit){
 
                     document.getElementById('total-profit').textContent = `$${formatCurrency(profit?.toFixed(2))}`;
                 }
 
-            document.getElementById('wallet-balance').textContent = `$${formatCurrency(balance.toFixed(2))}`;
-            document.getElementById('wallet-balance').textContent = `$${formatCurrency(balance.toFixed(2))}`;
+                document.getElementById('wallet-balance').textContent = `$${formatCurrency(balance.toFixed(2))}`;
+                document.getElementById('wallet-balance').textContent = `$${formatCurrency(balance.toFixed(2))}`;
 
                 const tierMap = {
                     0: { name: 'N/A', amount: 0 },
@@ -553,9 +580,29 @@ if(balance){
                 };
 
                 if (tier > 0 && tierMap[tier]) {
-                    document.getElementById('active-investment').textContent = `$${tierMap[tier].amount.toFixed(2)}`;
-                    document.getElementById('next-payout').textContent = tierMap[tier].name;
+                    document.getElementById(' next-payout').textContent = JSON.stringify(nextPayout);
+                    document.getElementById('active-investment').textContent = tierMap[tier].name;
                 }
+                  
+                 
+                } 
+             } 
+        
+
+            } catch (error) {
+                console.error('Network or Server Error:', error);
+                
+            } 
+
+
+
+
+
+
+
+            if (user) {
+               
+                
             }
 
             // 2. Mobile Menu Toggle

@@ -167,7 +167,7 @@ app.get('/api/v1/users/:id', (req, res) => {
         const decoded = jwt.verify(token, SECRET_KEY);
 
         const stmt = db.prepare(
-            'SELECT id, name, email, balance, totalProfit, activeInvestment, nextPayout, tier FROM users WHERE id = ?'
+            'SELECT id, name, email, balance, totalProfit, activeInvestment, nextPayout, isAdmin, tier FROM users WHERE id = ?'
         );
         const user = stmt.get(userIdToFetch); 
 
@@ -200,7 +200,7 @@ app.get('/api/v1/users/:id', (req, res) => {
             
            try {
      const stmt = db.prepare(
-        'SELECT id, name, email, balance, totalProfit, activeInvestment, nextPayout, tier FROM users'
+        'SELECT id, name, email, balance, totalProfit, activeInvestment, nextPayout, isAdmin,  tier FROM users'
     );
 
     const rows = stmt.all(); // synchronous
@@ -517,6 +517,7 @@ app.post('/api/v1/auth/reset-password', async (req, res) => {
     const hash = await bcrypt.hash(password, saltRounds);
     db.prepare('UPDATE users SET password = ? WHERE email = ?').run(hash, reset.email);
     db.prepare('DELETE FROM password_resets WHERE token = ?').run(token);
+    
 
     res.json({ success: true, message: 'Password has been reset successfully.' });
 });
@@ -536,6 +537,7 @@ app.get('/api/v1/admin/search-user', adminRequired, async (req, res) => {
 
 app.post('/api/v1/admin/confirm-payment', adminRequired, async (req, res) => {
     const { userId, balance, totalProfit, activeInvestment, nextPayout } = req.body;
+    console.log(req.body)
 
     const user = db.prepare('SELECT * FROM users WHERE id = ?').get(userId);
     if (!user) {
@@ -547,6 +549,8 @@ app.post('/api/v1/admin/confirm-payment', adminRequired, async (req, res) => {
         SET balance = ?, totalProfit = ?, activeInvestment = ?, nextPayout = ?
         WHERE id = ?
     `).run(balance, totalProfit, activeInvestment, nextPayout, userId);
+
+    console.log(res)
 
     const subscription = {
         userId,
