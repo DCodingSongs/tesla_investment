@@ -280,8 +280,7 @@ userSearchInput1.addEventListener('input', async () => {
                     userEmailSpan.textContent = currentUser.email;
                     userBalanceSpan.textContent = currentUser.balance;
                     // Pre-fill form fields with existing data if available
-console.log( document.getElementById('form-total-balance'))
-console.log( document.getElementById('update-user-form'))
+
 
                     document.getElementById('form-total-balance').value = currentUser.balance || '';
                     document.getElementById('form-total-profit').value = currentUser.totalProfit || '';
