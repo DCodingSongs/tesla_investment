@@ -1375,18 +1375,52 @@
                 <div class="content-panel">
                     <h2>⏳ Transaction & Investment History</h2>
                     <p style="color: var(--color-text-light); margin-bottom: 20px;">All transactions are recorded here.</p>
-                    <table id="history-table" style="width: 100%; border-collapse: collapse; margin-top: 20px;">
-                        <thead>
-                            <tr>
-                                <th style="border: 1px solid var(--color-border); padding: 12px; text-align: left; background-color: #374151; color: white;">Date</th>
-                                <th style="border: 1px solid var(--color-border); padding: 12px; text-align: left; background-color: #374151; color: white;">Type</th>
-                                <th style="border: 1px solid var(--color-border); padding: 12px; text-align: left; background-color: #374151; color: white;">Amount</th>
-                            </tr>
-                        </thead>
-                        <tbody id="history-table-body">
-                            <!-- Subscription data will be inserted here -->
-                        </tbody>
-                    </table>
+                   <div class="overflow-x-auto">
+    <table
+      id="history-table"
+      class="min-w-full border border-gray-700 rounded-lg overflow-hidden text-sm text-gray-200"
+    >
+      <!-- Header (hidden on mobile) -->
+      <thead class="bg-gray-700 hidden md:table-header-group">
+        <tr>
+          <th class="px-4 py-3 border-b border-gray-600 text-left font-semibold">
+            Date
+          </th>
+          <th class="px-4 py-3 border-b border-gray-600 text-left font-semibold">
+            Type
+          </th>
+          <th class="px-4 py-3 border-b border-gray-600 text-left font-semibold">
+            Amount
+          </th>
+        </tr>
+      </thead>
+
+      <!-- Body -->
+      <tbody
+        id="history-table-body"
+        class="divide-y divide-gray-700"
+      >
+        <!-- Example Row -->
+        <tr class="block md:table-row bg-gray-800 md:bg-transparent">
+          <td class="block md:table-cell px-4 py-2">
+            <span class="md:hidden font-medium text-gray-400">Date:</span>
+            2025-01-10
+          </td>
+
+          <td class="block md:table-cell px-4 py-2">
+            <span class="md:hidden font-medium text-gray-400">Type:</span>
+            Subscription
+          </td>
+
+          <td class="block md:table-cell px-4 py-2">
+            <span class="md:hidden font-medium text-gray-400">Amount:</span>
+            ₦50,000
+          </td>
+        </tr>
+        <!-- JS will insert more rows here -->
+      </tbody>
+    </table>
+  </div>
                     <div id="pagination-controls" style="margin-top: 20px; text-align: center;">
                         <button id="prev-page" class="cta-button" disabled>Previous</button>
                         <span id="page-info" style="margin: 0 15px;"></span>

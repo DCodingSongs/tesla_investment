@@ -31,6 +31,22 @@
         const msgConfirm = document.getElementById('msgConfirm');
 
 
+function getDaysFromToday(dateString) {
+    const today = new Date();
+    const targetDate = new Date(dateString);
+
+    // Normalize time (avoid timezone issues)
+    today.setHours(0, 0, 0, 0);
+    targetDate.setHours(0, 0, 0, 0);
+
+    const diffTime = targetDate - today;
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+    if (diffDays > 1) return `${diffDays} days`;
+    if (diffDays === 1) return `1 day`;
+    if (diffDays === 0) return `Today`;
+    return 'Expired'
+}
 
 
 
@@ -561,7 +577,7 @@ fetchMe()
                     const balance = user.balance || 0;
                 const tier = user.tier || 0;
                 const profit = user.totalProfit;
-                const nextPayout = user.nextPayout
+                const nextPayout = getDaysFromToday(user.nextPayout)
                if(balance){
                 document.getElementById('total-balance').textContent = `$${formatCurrency(balance.toFixed(2))}`;
 
