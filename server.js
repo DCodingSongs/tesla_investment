@@ -35,8 +35,7 @@ function generateTAINumber() {
     return padded;
 }
 
-// Example usage:
-const taiId = `TAI-${generateTAINumber()}`;
+
 
 
 

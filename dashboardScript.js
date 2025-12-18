@@ -86,12 +86,12 @@ window.addEventListener('load', () => {
         // Socket connection variable
         let chatSocket = null;
 
-function formatCurrency(amount) {
-    // Ensure it's a number
-    const num = Number(amount) || 0;
-    // Convert to comma-separated string with 2 decimal places
-    return num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-}
+        function formatCurrency(amount) {
+        // Ensure it's a number
+        const num = Number(amount) || 0;
+        // Convert to comma-separated string with 2 decimal places
+        return num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
 
 
         // --- Auth & Profile Functions ---
@@ -207,18 +207,10 @@ async function loadProfile() {
      
 
         const confirmModal = document.getElementById('confirmModal');
-const confirmTitle = document.getElementById('confirmTitle');
-const confirmMessage = document.getElementById('confirmMessage');
-const confirmOk = document.getElementById('confirmOk');
-const confirmCancel = document.getElementById('confirmCancel');
-
-
-
-
-
-
-
-
+        const confirmTitle = document.getElementById('confirmTitle');
+        const confirmMessage = document.getElementById('confirmMessage');
+        const confirmOk = document.getElementById('confirmOk');
+        const confirmCancel = document.getElementById('confirmCancel');
         const userSearchInput1 = document.getElementById('user-search');
         const userInfoDiv = document.getElementById('user-info');
         const userNameSpan = document.getElementById('user-name');
@@ -238,50 +230,12 @@ const confirmCancel = document.getElementById('confirmCancel');
                 messageBox1.classList.add('bg-red-900', 'text-red-300');
             }
             messageBox1.classList.remove('hidden');
-
-
               setTimeout(() => {
         messageBox1.classList.add('hidden');
     }, 3000);
         }
 
-//       if (userSearchInput1) {
-//     userSearchInput1.addEventListener('input', async () => {
-//         const email = userSearchInput1.value.trim();
 
-//         if (email.length < 3) {
-//             userInfoDiv?.classList.add('hidden');
-//             return;
-//         }
-
-//         try {
-//             const userToken = JSON.parse(localStorage.getItem('userToken'));
-//             const token = userToken?.value;
-
-//             const response = await fetch(
-//                 `/api/v1/admin/search-user?email=${encodeURIComponent(email)}`,
-//                 {
-//                     headers: { Authorization: `Bearer ${token}` }
-//                 }
-//             );
-
-//             const data = await response.json();
-
-//             if (response.ok && data.success) {
-//                 currentUser = data.user;
-//                 userNameSpan.textContent = currentUser.name;
-//                 userEmailSpan.textContent = currentUser.email;
-//                 userBalanceSpan.textContent = currentUser.balance;
-//                 userInfoDiv.classList.remove('hidden');
-//             } else {
-//                 userInfoDiv.classList.add('hidden');
-//             }
-//         } catch (err) {
-//             console.error(err);
-//             userInfoDiv?.classList.add('hidden');
-//         }
-//     });
-// }
 
 if(userSearchInput1){
 userSearchInput1.addEventListener('input', async () => {
@@ -305,7 +259,7 @@ userSearchInput1.addEventListener('input', async () => {
                     userEmailSpan.textContent = currentUser.email;
                     userBalanceSpan.textContent = currentUser.balance;
                     // Pre-fill form fields with existing data if available
-console.log(document.getElementById('form-total-balance'))
+
 
                     document.getElementById('form-total-balance').value = currentUser.balance || '';
                     document.getElementById('form-total-profit').value = currentUser.totalProfit || '';
@@ -338,8 +292,7 @@ if(updateUserForm){
                 activeInvestment: document.getElementById('form-active-investment').value,
                 nextPayout: document.getElementById('form-next-payout').value
             };
-            debugger
-            console.log(updatedData)
+           
 
             try {
                 const userToken = JSON.parse(localStorage.getItem('userToken'));
@@ -371,54 +324,17 @@ if(updateUserForm){
 
 
 
-
-// if (confirmPaymentBtn) {
-    
-//     confirmPaymentBtn.addEventListener('click', async () => {
-        
-//         if (!currentUser) return;
-
-//         try {
-//             const userToken = JSON.parse(localStorage.getItem('userToken'));
-//             const token = userToken?.value;
-
-//             const response = await fetch('/api/v1/admin/confirm-payment', {
-//                 method: 'POST',
-//                 headers: {
-//                     'Content-Type': 'application/json',
-//                     Authorization: `Bearer ${token}`
-//                 },
-//                 body: JSON.stringify({ userId: currentUser.id })
-//             });
-
-//             const data = await response.json();
-
-//             if (response.ok && data.success) {
-//                 showMessage('Payment confirmed successfully.', 'success');
-//                 userSearchInput1.value = '';
-//                 userInfoDiv.classList.add('hidden');
-                
-//                 userBalanceSpan.textContent = data.newBalance;
-//             } else {
-//                 showMessage(data.message || 'Failed to confirm payment', 'error');
-//             }
-//         } catch (err) {
-//             console.error(err);
-//             showMessage('Network error', 'error');
-//         }
-//     });
-// }
-
-
       
 function showConfirm({ title, message, onConfirm }) {
     confirmTitle.textContent = title || 'Confirm';
     confirmMessage.textContent = message || 'Are you sure?';
 
-    confirmModal.classList.remove('hidden');
+    // confirmModal.classList.remove('hidden');
+     confirmModal.style.display = 'block';
 
     const cleanup = () => {
-        confirmModal.classList.add('hidden');
+         confirmModal.style.display = 'none';
+        // confirmModal.classList.add('hidden');
         confirmOk.onclick = null;
         confirmCancel.onclick = null;
     };
@@ -906,6 +822,7 @@ if(addUserBtn){
                     const token = getItemWithExpiry('userToken');
                     if (e.target.classList.contains('delete-btn')) {
                         const id = e.target.dataset.id;
+                        confirmModal.style.display = 'block';
 
                         // Show confirmation modal before deletion
                         showConfirm({
@@ -921,6 +838,7 @@ if(addUserBtn){
                                     const data = await response.json();
 
                                     if (data.success) {
+                                        
                                         showMessageBox('Success', 'User deleted successfully.', 'success');
                                         fetchUsers(); // Refresh user table
                                     } else {
