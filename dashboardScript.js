@@ -902,6 +902,7 @@ if(addUserBtn){
                 });
 
                 userTableBody.addEventListener('click', async (e) => {
+                    debugger
                     const token = getItemWithExpiry('userToken');
                     if (e.target.classList.contains('delete-btn')) {
                         const id = e.target.dataset.id;
@@ -912,6 +913,7 @@ if(addUserBtn){
                             message: 'Are you sure you want to delete this user?',
                             onConfirm: async () => {
                                 try {
+                                
                                     const response = await fetch(`/api/v1/users/${id}`, {
                                         method: 'DELETE',
                                         headers: getAuthHeaders(token)
