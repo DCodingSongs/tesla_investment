@@ -39,7 +39,7 @@ function getSmartDayLabel(dateString) {
     today.setHours(0, 0, 0, 0);
     target.setHours(0, 0, 0, 0);
 
-    const diffMs = target - today;
+    const diffMs = (target - today) || 0;
     const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
 
     if (diffDays < 0) return 'Expired';

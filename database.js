@@ -3,11 +3,16 @@ const bcrypt = require('bcrypt');
 const path = require('path');
 
 const saltRounds = 10;
-const dbPath = path.join(__dirname, 'database.db');
+// const dbPath = path.join(__dirname, 'database.db');
+
+const dbPath = process.env.RENDER 
+    ? '/var/data/database.db' 
+    : path.join(__dirname, 'database.db');
 
 // Create or open database
 const db = new Database(dbPath);
 // const db = new Database('./database.db');
+db.pragma('journal_mode = WAL');
 
 function initializeDatabase() {
   try {
