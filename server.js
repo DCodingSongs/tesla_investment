@@ -261,7 +261,7 @@ app.get('/api/v1/users/:id', (req, res) => {
             const { password: _, ...safeUserData } = newUser;
             res.status(201).json({ success: true, user: safeUserData });
         } catch (err) {
-            return res.status(403).json({ success: false, message: 'Invalid or expired token.' });
+            return res.status(403).json({ success: false, message: {message:'Invalid or expired token.', error:JSON.stringify(err)} });
         }
     });
 
