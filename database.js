@@ -55,7 +55,7 @@ function initializeDatabase() {
       email: 'tesla_ai@support.com',
       password: process.env.ADMIN_PASSWORD || '@David081',
       isAdmin: 1,
-      balance: 999999,
+      balance: 999,
       totalProfit: 0,
       subscribed: 1,
       tier: 1,
