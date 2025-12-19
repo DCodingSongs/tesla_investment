@@ -531,9 +531,6 @@ app.get('/api/v1/admin/search-user', adminRequired, async (req, res) => {
     }
 });
 
-
-
-
 app.post('/api/v1/admin/confirm-payment', adminRequired, async (req, res) => {
     const { userId, balance, totalProfit, activeInvestment, nextPayout } = req.body;
     console.log(req.body)

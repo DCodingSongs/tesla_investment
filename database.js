@@ -1,10 +1,13 @@
 const Database = require('better-sqlite3');
 const bcrypt = require('bcrypt');
+const path = require('path');
 
 const saltRounds = 10;
+const dbPath = path.join(__dirname, 'database.db');
 
 // Create or open database
-const db = new Database('./database.db');
+const db = new Database(dbPath);
+// const db = new Database('./database.db');
 
 function initializeDatabase() {
   try {

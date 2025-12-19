@@ -5,7 +5,10 @@
     "dist",                           
     ".git",                          
     "logs",                           
-    "*.spec.ts"                      
+    "*.spec.ts",
+     "database.db",
+    "*.db",
+    "*.sqlite"                  
   ],
   "ext": "ts,js,json, html,css",              
    "exec": "node server.js" ,
